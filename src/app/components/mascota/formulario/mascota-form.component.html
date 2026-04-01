@@ -1,0 +1,575 @@
+<p-confirmDialog
+  [key]="'mascotaForm'"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<form [formGroup]="formGroupMascota" (ngSubmit)="guardar()">
+  <div class="grid">
+    <!-- Form Fields Column -->
+    <div class="col-12 lg:col-8">
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <label for="nombre" class="block mb-2">
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input
+            id="nombre"
+            type="text"
+            pInputText
+            formControlName="nombre"
+            class="w-full"
+            placeholder="Nombre de la mascota"
+            [class.ng-invalid]="
+              formGroupMascota.get('nombre')?.invalid && formEnviado
+            "
+            pTooltip="Ingrese el nombre de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          />
+          @if (formGroupMascota.get("nombre")?.invalid && formEnviado) {
+            <small class="text-red-500">El nombre es requerido</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="fechaNacimiento" class="block mb-2">
+            Fecha de Nacimiento
+          </label>
+          <p-datepicker
+            id="fechaNacimiento"
+            formControlName="fechaNacimiento"
+            [showIcon]="true"
+            iconDisplay="button"
+            [showOnFocus]="false"
+            dateFormat="dd/mm/yy"
+            placeholder="Seleccione fecha"
+            appendTo="body"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            pTooltip="Seleccione la fecha de nacimiento"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          ></p-datepicker>
+          @if (getEdadMascota()) {
+            <small class="text-500">Edad: {{ getEdadMascota() }}</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="sexo" class="block mb-2"> Sexo </label>
+          <p-select
+            id="sexo"
+            [options]="opcionesSexo"
+            formControlName="sexo"
+            placeholder="Seleccione sexo"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            pTooltip="Seleccione el sexo de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-sexo pTemplate="selectedItem">
+              {{ sexo.label }}
+            </ng-template>
+          </p-select>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="color" class="block mb-2"> Color </label>
+          <input
+            id="color"
+            type="text"
+            pInputText
+            formControlName="color"
+            class="w-full"
+            placeholder="Color del pelaje"
+            [class.ng-invalid]="
+              formGroupMascota.get('color')?.invalid && formEnviado
+            "
+            pTooltip="Ingrese el color del pelaje"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          />
+          @if (formGroupMascota.get("color")?.invalid && formEnviado) {
+            <small class="text-red-500"
+              >El color no debe exceder 100 caracteres</small
+            >
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="peso" class="block mb-2"> Peso (gramos) </label>
+          <p-inputNumber
+            id="peso"
+            formControlName="peso"
+            [min]="1"
+            [maxFractionDigits]="0"
+            placeholder="Peso en gramos"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            [class.ng-invalid]="
+              formGroupMascota.get('peso')?.invalid && formEnviado
+            "
+            pTooltip="Ingrese el peso en gramos"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          ></p-inputNumber>
+          @if (formGroupMascota.get("peso")?.invalid && formEnviado) {
+            <small class="text-red-500">El peso debe ser mínimo 1 gramo</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="tamanio" class="block mb-2"> Tamaño </label>
+          <input
+            id="tamanio"
+            type="text"
+            pInputText
+            formControlName="tamanio"
+            class="w-full"
+            placeholder="Ej: Pequeño, Mediano, Grande"
+            [class.ng-invalid]="
+              formGroupMascota.get('tamanio')?.invalid && formEnviado
+            "
+            pTooltip="Ingrese el tamaño de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          />
+          @if (formGroupMascota.get("tamanio")?.invalid && formEnviado) {
+            <small class="text-red-500"
+              >El tamaño no debe exceder 50 caracteres</small
+            >
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="pelaje" class="block mb-2"> Pelaje </label>
+          <input
+            id="pelaje"
+            type="text"
+            pInputText
+            formControlName="pelaje"
+            class="w-full"
+            placeholder="Ej: Corto, Largo, Rizado"
+            [class.ng-invalid]="
+              formGroupMascota.get('pelaje')?.invalid && formEnviado
+            "
+            pTooltip="Ingrese el tipo de pelaje"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          />
+          @if (formGroupMascota.get("pelaje")?.invalid && formEnviado) {
+            <small class="text-red-500"
+              >El pelaje no debe exceder 50 caracteres</small
+            >
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idEspecie" class="block mb-2">
+            Especie <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="idEspecie"
+            [options]="especies"
+            formControlName="idEspecie"
+            placeholder="Seleccione especie"
+            optionLabel="nombre"
+            optionValue="id"
+            [filter]="true"
+            filterBy="nombre,descripcion"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            [class.ng-invalid]="
+              formGroupMascota.get('idEspecie')?.invalid && formEnviado
+            "
+            pTooltip="Seleccione la especie de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-especie pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ especie.nombre }}</div>
+                @if (especie.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ especie.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+            <ng-template let-especie pTemplate="selectedItem">
+              {{ especie.nombre }}
+            </ng-template>
+          </p-select>
+          @if (formGroupMascota.get("idEspecie")?.invalid && formEnviado) {
+            <small class="text-red-500">La especie es requerida</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idRaza" class="block mb-2">
+            Raza <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="idRaza"
+            [options]="razasFiltradas"
+            formControlName="idRaza"
+            placeholder="Seleccione raza"
+            optionLabel="nombre"
+            optionValue="id"
+            [filter]="true"
+            filterBy="nombre,descripcion"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            [class.ng-invalid]="
+              formGroupMascota.get('idRaza')?.invalid && formEnviado
+            "
+            pTooltip="Seleccione la raza de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-raza pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ raza.nombre }}</div>
+              </div>
+            </ng-template>
+            <ng-template let-raza pTemplate="selectedItem">
+              {{ raza.nombre }}
+            </ng-template>
+          </p-select>
+          @if (formGroupMascota.get("idRaza")?.invalid && formEnviado) {
+            <small class="text-red-500">La raza es requerida</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idMascotaEstado" class="block mb-2">
+            Estado <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="idMascotaEstado"
+            [options]="estados"
+            formControlName="idMascotaEstado"
+            placeholder="Seleccione estado"
+            optionLabel="nombre"
+            optionValue="id"
+            [filter]="true"
+            filterBy="nombre,descripcion"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            [class.ng-invalid]="
+              formGroupMascota.get('idMascotaEstado')?.invalid && formEnviado
+            "
+            pTooltip="Seleccione el estado de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-estado pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ estado.nombre }}</div>
+                @if (estado.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ estado.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+            <ng-template let-estado pTemplate="selectedItem">
+              {{ estado.nombre }}
+            </ng-template>
+          </p-select>
+          @if (
+            formGroupMascota.get("idMascotaEstado")?.invalid && formEnviado
+          ) {
+            <small class="text-red-500">El estado es requerido</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idPersona" class="block mb-2">
+            Dueño <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="idPersona"
+            [options]="personas"
+            formControlName="idPersona"
+            placeholder="Seleccione dueño"
+            optionLabel="apellidos"
+            optionValue="id"
+            [filter]="true"
+            filterBy="apellidos,nombres,documento"
+            [showClear]="true"
+            filterPlaceholder="Buscar por apellido, nombre o documento"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            [class.ng-invalid]="
+              formGroupMascota.get('idPersona')?.invalid && formEnviado
+            "
+            pTooltip="Seleccione el dueño de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-persona pTemplate="item">
+              <div>
+                <div class="font-semibold">
+                  {{ persona.apellidos }}, {{ persona.nombres }}
+                </div>
+                @if (persona.documento && persona.documentoTipo) {
+                  <div class="text-sm text-gray-600">
+                    {{ persona.documentoTipo.nombre }}: {{ persona.documento }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+            <ng-template let-persona pTemplate="selectedItem">
+              {{ getPersonaLabel(persona) }}
+            </ng-template>
+          </p-select>
+          @if (formGroupMascota.get("idPersona")?.invalid && formEnviado) {
+            <small class="text-red-500">El dueño es requerido</small>
+          }
+        </div>
+
+        <div class="col-12 md:col-6">
+          <span class="block mb-2">Esterilizado</span>
+          <div class="flex align-items-center h-3rem">
+            <p-checkbox
+              inputId="esterilizado"
+              formControlName="esterilizado"
+              [binary]="true"
+            ></p-checkbox>
+            <label for="esterilizado" class="ml-2">Mascota esterilizada</label>
+          </div>
+        </div>
+
+        @if (modoEdicion && puedeToggleActivo) {
+          <div class="col-12 md:col-6">
+            <span class="block mb-2">Estado</span>
+            <div class="flex align-items-center h-3rem">
+              <p-checkbox
+                inputId="activo"
+                formControlName="activo"
+                [binary]="true"
+              ></p-checkbox>
+              <label for="activo" class="ml-2">Mascota activa</label>
+            </div>
+          </div>
+        }
+
+        <div class="col-12">
+          <label for="identificador" class="block mb-2">
+            Identificador (Chip, Tatuaje, etc.)
+          </label>
+          <input
+            id="identificador"
+            type="text"
+            pInputText
+            formControlName="identificador"
+            class="w-full"
+            placeholder="Número de chip o identificación"
+            pTooltip="Ingrese el identificador único (chip, tatuaje, etc.)"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          />
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idAlergias" class="block mb-2">Alergias</label>
+          <p-multiSelect
+            id="idAlergias"
+            [options]="alergias"
+            formControlName="idAlergias"
+            placeholder="Seleccione alergias"
+            optionLabel="nombre"
+            optionValue="id"
+            [filter]="true"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            display="chip"
+            pTooltip="Seleccione las alergias de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-alergia pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ alergia.nombre }}</div>
+                @if (alergia.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ alergia.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+            <ng-template let-alergia pTemplate="selectedItem">
+              {{ alergia.nombre }}
+            </ng-template>
+          </p-multiSelect>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <label for="idCondicionesCronicas" class="block mb-2">
+            Condiciones Crónicas
+          </label>
+          <p-multiSelect
+            id="idCondicionesCronicas"
+            [options]="condicionesCronicas"
+            formControlName="idCondicionesCronicas"
+            placeholder="Seleccione condiciones crónicas"
+            optionLabel="nombre"
+            optionValue="id"
+            [filter]="true"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            display="chip"
+            pTooltip="Seleccione las condiciones crónicas de la mascota"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [tooltipOptions]="{ life: 4000 }"
+          >
+            <ng-template let-condicion pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ condicion.nombre }}</div>
+                @if (condicion.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ condicion.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+            <ng-template let-condicion pTemplate="selectedItem">
+              {{ condicion.nombre }}
+            </ng-template>
+          </p-multiSelect>
+        </div>
+
+        <div class="col-12">
+          <label for="observaciones" class="block mb-2">Observaciones</label>
+          <textarea
+            id="observaciones"
+            pTextarea
+            formControlName="observaciones"
+            rows="3"
+            class="w-full"
+            placeholder="Observaciones adicionales sobre la mascota"
+            pTooltip="Ingrese observaciones adicionales"
+            tooltipPosition="top"
+            [showDelay]="500"
+            [life]="4000"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Column -->
+    <div class="col-12 lg:col-4">
+      <div class="block mb-2 font-semibold">Imagen de Perfil</div>
+
+      <div class="flex flex-column gap-3">
+        <div
+          class="border-1 border-300 border-round p-2 flex justify-content-center"
+        >
+          <p-image
+            [src]="
+              uploadedImagenPerfilUrl
+                ? uploadedImagenPerfilUrl
+                : 'assets/img-inicio-sesion.png'
+            "
+            [alt]="
+              uploadedImagenPerfil
+                ? uploadedImagenPerfil.descripcion || 'Imagen de perfil'
+                : 'Imagen por defecto'
+            "
+            width="250"
+            imageClass="profile-image"
+          />
+        </div>
+
+        <div class="flex flex-column gap-2">
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            style="display: none"
+            (change)="onImageSelect($event)"
+          />
+
+          <p-button
+            label="Cargar Imagen"
+            icon="pi pi-upload"
+            severity="info"
+            size="small"
+            [outlined]="true"
+            (onClick)="fileInput.click()"
+            [disabled]="uploadingImage"
+            class="w-full"
+            pTooltip="Cargar imagen de perfil de la mascota"
+            tooltipPosition="bottom"
+            [tooltipOptions]="{ life: 3000 }"
+          />
+
+          @if (uploadedImagenPerfil) {
+            <p-button
+              label="Eliminar Imagen"
+              icon="pi pi-trash"
+              severity="danger"
+              size="small"
+              [outlined]="true"
+              (onClick)="deleteImage()"
+              class="w-full"
+              pTooltip="Eliminar imagen de perfil y restaurar imagen por defecto"
+              tooltipPosition="bottom"
+              [tooltipOptions]="{ life: 3000 }"
+            />
+          }
+
+          @if (uploadingImage) {
+            <small class="text-500">
+              <i class="pi pi-spin pi-spinner"></i> Cargando...
+            </small>
+          } @else if (uploadedImagenPerfil) {
+          } @else {
+            <small class="text-500">Formatos: JPG, PNG, GIF, etc.</small>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-4">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cancelar()"
+      type="button"
+    />
+    <p-button
+      label="Guardar"
+      type="submit"
+      [disabled]="formGroupMascota.invalid"
+    />
+  </div>
+</form>

@@ -1,0 +1,181 @@
+<form [formGroup]="formGroupUsuario" (ngSubmit)="guardar()">
+  <div class="grid">
+    <div class="col-12">
+      <label for="username" class="block mb-2">
+        Nombre de Usuario <span class="text-red-500">*</span>
+      </label>
+      <input
+        id="username"
+        type="text"
+        pInputText
+        formControlName="username"
+        class="w-full"
+        [class.ng-invalid]="
+          formGroupUsuario.get('username')?.invalid && formEnviado
+        "
+        pTooltip="Ingrese el nombre de usuario (mínimo 4 caracteres)"
+        tooltipPosition="top"
+        [showDelay]="500"
+        [life]="4000"
+      />
+      @if (formGroupUsuario.get("username")?.invalid && formEnviado) {
+        <small class="text-red-500">
+          @if (formGroupUsuario.get("username")?.hasError("required")) {
+            El nombre de usuario es requerido
+          }
+          @if (formGroupUsuario.get("username")?.hasError("minlength")) {
+            El nombre de usuario debe tener al menos 4 caracteres
+          }
+        </small>
+      }
+    </div>
+
+    <div class="col-12">
+      <label for="persona" class="block mb-2">
+        Persona <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="persona"
+        formControlName="persona"
+        [options]="personas"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        [class.ng-invalid]="
+          formGroupUsuario.get('persona')?.invalid && formEnviado
+        "
+        pTooltip="Seleccione la persona asociada al usuario"
+        tooltipPosition="top"
+        [showDelay]="500"
+        [tooltipOptions]="{ life: 4000 }"
+        [filter]="true"
+        filterBy="nombres,apellidos,documento"
+        filterPlaceholder="Buscar persona..."
+        [showClear]="true"
+      >
+        <ng-template let-persona pTemplate="item">
+          <div>
+            <div class="font-semibold">
+              {{ persona.nombres }} {{ persona.apellidos }}
+            </div>
+            @if (persona.documento && persona.documentoTipo) {
+              <div class="text-sm text-gray-600">
+                {{ persona.documentoTipo.nombre }}: {{ persona.documento }}
+              </div>
+            }
+          </div>
+        </ng-template>
+        <ng-template let-persona pTemplate="selectedItem">
+          <div *ngIf="persona">
+            {{ persona.nombres }} {{ persona.apellidos }}
+            @if (persona.documento && persona.documentoTipo) {
+              <span class="text-sm text-gray-600">
+                ({{ persona.documentoTipo.nombre }} {{ persona.documento }})
+              </span>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+      @if (formGroupUsuario.get("persona")?.invalid && formEnviado) {
+        <small class="text-red-500">La persona es requerida</small>
+      }
+    </div>
+
+    <div class="col-12">
+      <label for="roles" class="block mb-2">Roles</label>
+      <p-multiSelect
+        id="roles"
+        formControlName="roles"
+        [options]="roles"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccione los roles"
+        [filter]="true"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        pTooltip="Seleccione uno o más roles para el usuario"
+        tooltipPosition="top"
+        [showDelay]="500"
+        [tooltipOptions]="{ life: 4000 }"
+        display="chip"
+      >
+        <ng-template let-rol pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ rol.nombre }}</div>
+            @if (rol.descripcion) {
+              <div class="text-sm text-gray-600">{{ rol.descripcion }}</div>
+            }
+          </div>
+        </ng-template>
+      </p-multiSelect>
+    </div>
+
+    <div class="col-12">
+      <label for="password" class="block mb-2">
+        Contraseña
+        @if (!modoEdicion) {
+          <span class="text-red-500">*</span>
+        }
+        @if (modoEdicion) {
+          <span class="text-sm font-normal text-500">
+            (dejar en blanco para mantener la actual)
+          </span>
+        }
+      </label>
+      <p-password
+        id="password"
+        formControlName="password"
+        [toggleMask]="true"
+        [feedback]="false"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [style]="{ width: '100%' }"
+        pTooltip="Ingrese la contraseña (mínimo 4 caracteres)"
+        tooltipPosition="top"
+        [showDelay]="500"
+        [tooltipOptions]="{ life: 4000 }"
+      />
+      @if (
+        formGroupUsuario.get("password")?.invalid && formEnviado && !modoEdicion
+      ) {
+        <small class="text-red-500">
+          @if (formGroupUsuario.get("password")?.hasError("required")) {
+            La contraseña es requerida
+          }
+          @if (formGroupUsuario.get("password")?.hasError("minlength")) {
+            La contraseña debe tener al menos 4 caracteres
+          }
+        </small>
+      }
+    </div>
+
+    @if (modoEdicion && puedeToggleActivo) {
+      <div class="col-12">
+        <span class="block mb-2">Estado</span>
+        <div class="flex align-items-center h-3rem">
+          <p-checkbox
+            inputId="activo"
+            formControlName="activo"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="activo" class="ml-2">Usuario activo</label>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-3">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button
+      label="Guardar"
+      type="submit"
+      [disabled]="formGroupUsuario.invalid"
+    />
+  </div>
+</form>

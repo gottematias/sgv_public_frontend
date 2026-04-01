@@ -1,0 +1,3993 @@
+{
+  "info": {
+    "_postman_id": "sgv-api-v1",
+    "name": "Sistema Gestion Veterinaria v1.0",
+    "description": "API REST para gestión de clínica veterinaria\n\n## Autenticación\nLa API utiliza JWT Bearer Token. Obtener token via POST /auth/login e incluirlo en el header: `Authorization: Bearer {token}`\n\n## Rate Limiting\n- **Global**: 100 requests por 60 segundos por IP\n- **Login**: 5 requests por 60 segundos por IP\n\n## Formato de Respuesta\nTodas las respuestas usan el wrapper ResponseDTO:\n```json\n{\n  \"data\": any,\n  \"code\": 0,\n  \"error\": \"\"\n}\n```",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - 🔒 Autentificacion",
+      "item": [
+        {
+          "name": "01.01 - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.environment.set('token', response.data.token);",
+                  "        console.log('Token guardado:', response.data.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuarioDefaultAlias}}\",\n  \"contrasena\": \"{{usuarioDefaultContrasenia}}\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/auth/login",
+              "host": ["{{url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Iniciar sesión y obtener token JWT"
+          },
+          "response": []
+        },
+        {
+          "name": "01.02 - Refresh Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/auth/refreshtoken",
+              "host": ["{{url}}"],
+              "path": ["auth", "refreshtoken"]
+            },
+            "description": "Renovar token JWT"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - 👨 Persona",
+      "item": [
+        {
+          "name": "02.01 - Create Persona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('personaId', response.data.id);",
+                  "        console.log('Persona ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Juan Carlos\",\n  \"apellidos\": \"Rodriguez\",\n  \"documento\": \"30123456\",\n  \"idDocumentoTipo\": 1,\n  \"direccion\": {\n    \"idCiudad\": 1,\n    \"calle\": \"Av. Principal\",\n    \"numero\": \"123\",\n    \"observaciones\": \"Casa con portón verde\"\n  },\n  \"contactos\": [\n    {\n      \"dato\": \"1234567890\",\n      \"idContactoTipo\": 1,\n      \"idPersona\": 0\n    },\n    {\n      \"dato\": \"juan.rodriguez@email.com\",\n      \"idContactoTipo\": 2,\n      \"idPersona\": 0\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/persona/create",
+              "host": ["{{url}}"],
+              "path": ["persona", "create"]
+            },
+            "description": "Crear nueva persona"
+          },
+          "response": []
+        },
+        {
+          "name": "02.02 - Update Persona",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Juan Carlos Actualizado\",\n  \"apellidos\": \"Rodriguez\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/persona/update/{{personaId}}",
+              "host": ["{{url}}"],
+              "path": ["persona", "update", "{{personaId}}"]
+            },
+            "description": "Actualizar persona existente"
+          },
+          "response": []
+        },
+        {
+          "name": "02.03 - Get Persona",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/persona/get/{{personaId}}",
+              "host": ["{{url}}"],
+              "path": ["persona", "get", "{{personaId}}"]
+            },
+            "description": "Obtener persona por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "02.04 - List Personas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/persona/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["persona", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar personas con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "02.05 - Delete Persona",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/persona/delete/{{personaId}}",
+              "host": ["{{url}}"],
+              "path": ["persona", "delete", "{{personaId}}"]
+            },
+            "description": "Eliminar persona (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "02.06 - List Tipos de Documento",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/persona/documentotipo/list",
+              "host": ["{{url}}"],
+              "path": ["persona", "documentotipo", "list"]
+            },
+            "description": "Listar tipos de documento"
+          },
+          "response": []
+        },
+        {
+          "name": "02.07 - List Tipos de Contacto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/contacto/listcontactotipo",
+              "host": ["{{url}}"],
+              "path": ["contacto", "listcontactotipo"]
+            },
+            "description": "Listar tipos de contacto"
+          },
+          "response": []
+        },
+        {
+          "name": "02.08 - List Ciudades",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/direccion/listciudades",
+              "host": ["{{url}}"],
+              "path": ["direccion", "listciudades"]
+            },
+            "description": "Listar ciudades"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - 👤 Usuario",
+      "item": [
+        {
+          "name": "03.01 - Create Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('usuarioId', response.data.id);",
+                  "        console.log('Usuario ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"jrodriguez\",\n  \"password\": \"password123\",\n  \"idPersona\": 1,\n  \"roles\": [1]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/usuario/create",
+              "host": ["{{url}}"],
+              "path": ["usuario", "create"]
+            },
+            "description": "Crear nuevo usuario"
+          },
+          "response": []
+        },
+        {
+          "name": "03.02 - Update Usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newpassword456\",\n  \"activo\": true,\n  \"roles\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/usuario/update/{{usuarioId}}",
+              "host": ["{{url}}"],
+              "path": ["usuario", "update", "{{usuarioId}}"]
+            },
+            "description": "Actualizar usuario existente"
+          },
+          "response": []
+        },
+        {
+          "name": "03.03 - Get Usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/usuario/get/{{usuarioId}}",
+              "host": ["{{url}}"],
+              "path": ["usuario", "get", "{{usuarioId}}"]
+            },
+            "description": "Obtener usuario por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "03.04 - List Usuarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/usuario/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["usuario", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar usuarios con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "03.05 - Delete Usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/usuario/delete/{{usuarioId}}",
+              "host": ["{{url}}"],
+              "path": ["usuario", "delete", "{{usuarioId}}"]
+            },
+            "description": "Eliminar usuario (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "03.06 - List Roles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/usuario/roles/list",
+              "host": ["{{url}}"],
+              "path": ["usuario", "roles", "list"]
+            },
+            "description": "Listar roles disponibles"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - 👔 Empleado",
+      "item": [
+        {
+          "name": "04.01 - Create Empleado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('empleadoId', response.data.id);",
+                  "        console.log('Empleado ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idPersona\": 1,\n  \"idUsuario\": 1,\n  \"legajo\": \"EMP001\",\n  \"fechaIngreso\": \"2024-01-01\",\n  \"puestos\": [1],\n  \"especialidades\": [1],\n  \"atributos\": [\n    {\n      \"idAtributoTipo\": 1,\n      \"valor\": \"MP12345\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/empleado/create",
+              "host": ["{{url}}"],
+              "path": ["empleado", "create"]
+            },
+            "description": "Crear nuevo empleado"
+          },
+          "response": []
+        },
+        {
+          "name": "04.02 - Update Empleado",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"legajo\": \"EMP001-UPD\",\n  \"puestos\": [1, 2],\n  \"especialidades\": [1]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/empleado/update/{{empleadoId}}",
+              "host": ["{{url}}"],
+              "path": ["empleado", "update", "{{empleadoId}}"]
+            },
+            "description": "Actualizar empleado existente"
+          },
+          "response": []
+        },
+        {
+          "name": "04.03 - Get Empleado",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/get/{{empleadoId}}",
+              "host": ["{{url}}"],
+              "path": ["empleado", "get", "{{empleadoId}}"]
+            },
+            "description": "Obtener empleado por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "04.04 - List Empleados",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["empleado", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "idPuestos",
+                  "value": "",
+                  "description": "Filtrar por puestos (CSV de IDs, ej: 1,2,3)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar empleados con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "04.05 - List Veterinarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/veterinarios?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["empleado", "veterinarios"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda (nombre, apellido o usuario)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listar empleados activos con rol VETERINARIO"
+          },
+          "response": []
+        },
+        {
+          "name": "04.06 - Delete Empleado",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/delete/{{empleadoId}}",
+              "host": ["{{url}}"],
+              "path": ["empleado", "delete", "{{empleadoId}}"]
+            },
+            "description": "Eliminar empleado (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "04.07 - List Puestos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/puesto/list",
+              "host": ["{{url}}"],
+              "path": ["empleado", "puesto", "list"]
+            },
+            "description": "Listar puestos disponibles"
+          },
+          "response": []
+        },
+        {
+          "name": "04.08 - List Tipos de Atributo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/atributo-tipo/list",
+              "host": ["{{url}}"],
+              "path": ["empleado", "atributo-tipo", "list"]
+            },
+            "description": "Listar tipos de atributo"
+          },
+          "response": []
+        },
+        {
+          "name": "04.09 - List Especialidades",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/empleado/especialidad/list",
+              "host": ["{{url}}"],
+              "path": ["empleado", "especialidad", "list"],
+              "query": [
+                {
+                  "key": "idPuesto",
+                  "value": "",
+                  "description": "Filtrar por puesto",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Listar especialidades"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - 🐾 Mascota",
+      "item": [
+        {
+          "name": "05.01 - Create Mascota",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('mascotaId', response.data.id);",
+                  "        console.log('Mascota ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Max\",\n  \"idPersona\": 1,\n  \"idRaza\": 1,\n  \"idMascotaEstado\": 1,\n  \"identificador\": \"CHIP123456\",\n  \"sexo\": \"M\",\n  \"fechaNacimiento\": \"2020-05-15\",\n  \"peso\": 15.5,\n  \"observaciones\": \"Mascota muy activa\",\n  \"alergias\": [1],\n  \"condicionesCronicas\": []\n}"
+            },
+            "url": {
+              "raw": "{{url}}/mascota/create",
+              "host": ["{{url}}"],
+              "path": ["mascota", "create"]
+            },
+            "description": "Crear nueva mascota"
+          },
+          "response": []
+        },
+        {
+          "name": "05.02 - Update Mascota",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Max Actualizado\",\n  \"peso\": 16.0,\n  \"observaciones\": \"Peso actualizado después de control\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/mascota/update/{{mascotaId}}",
+              "host": ["{{url}}"],
+              "path": ["mascota", "update", "{{mascotaId}}"]
+            },
+            "description": "Actualizar mascota existente"
+          },
+          "response": []
+        },
+        {
+          "name": "05.03 - Get Mascota",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/mascota/get/{{mascotaId}}",
+              "host": ["{{url}}"],
+              "path": ["mascota", "get", "{{mascotaId}}"]
+            },
+            "description": "Obtener mascota por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "05.04 - List Mascotas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/mascota/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["mascota", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "idPersona",
+                  "value": "",
+                  "description": "Filtrar por dueño",
+                  "disabled": true
+                },
+                {
+                  "key": "idMascotaEstados",
+                  "value": "",
+                  "description": "Filtrar por estados (CSV de IDs, ej: 1,2,3)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar mascotas con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "05.05 - Delete Mascota",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/mascota/delete/{{mascotaId}}",
+              "host": ["{{url}}"],
+              "path": ["mascota", "delete", "{{mascotaId}}"]
+            },
+            "description": "Eliminar mascota (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "05.06 - Upload Imagen de Perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('adjuntoId', response.data.id);",
+                  "        console.log('Adjunto ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Archivo de imagen (máximo 25 MB)"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Imagen de perfil de mascota",
+                  "type": "text",
+                  "description": "Descripción opcional"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{url}}/mascota/{{mascotaId}}/imagen-perfil",
+              "host": ["{{url}}"],
+              "path": ["mascota", "{{mascotaId}}", "imagen-perfil"]
+            },
+            "description": "Subir imagen de perfil para la mascota. Formatos: jpg, jpeg, png, gif, bmp, webp, svg, tiff, tif. Máximo 25 MB."
+          },
+          "response": []
+        },
+        {
+          "name": "05.07 - Delete Imagen de Perfil",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/mascota/{{mascotaId}}/imagen-perfil",
+              "host": ["{{url}}"],
+              "path": ["mascota", "{{mascotaId}}", "imagen-perfil"]
+            },
+            "description": "Eliminar imagen de perfil de mascota"
+          },
+          "response": []
+        },
+        {
+          "name": "05.08 - List Estados de Mascota",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/mascota/estado/list",
+              "host": ["{{url}}"],
+              "path": ["mascota", "estado", "list"]
+            },
+            "description": "Listar estados de mascota"
+          },
+          "response": []
+        },
+        {
+          "name": "05.09 - List Especies",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/especie/list",
+              "host": ["{{url}}"],
+              "path": ["especie", "list"]
+            },
+            "description": "Listar especies"
+          },
+          "response": []
+        },
+        {
+          "name": "05.10 - List Razas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/especie/raza/list",
+              "host": ["{{url}}"],
+              "path": ["especie", "raza", "list"],
+              "query": [
+                {
+                  "key": "idEspecie",
+                  "value": "",
+                  "description": "Filtrar por especie",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Listar razas"
+          },
+          "response": []
+        },
+        {
+          "name": "05.11 - List Alergias",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/alergia/list",
+              "host": ["{{url}}"],
+              "path": ["alergia", "list"]
+            },
+            "description": "Listar alergias"
+          },
+          "response": []
+        },
+        {
+          "name": "05.12 - List Condiciones Cronicas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/alergia/condicioncronica/list",
+              "host": ["{{url}}"],
+              "path": ["alergia", "condicioncronica", "list"]
+            },
+            "description": "Listar condiciones crónicas"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - 📋 Historial Clinico",
+      "item": [
+        {
+          "name": "06.01 - Create Historial Clinico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('historialClinicoId', response.data.id);",
+                  "        console.log('Historial Clinico ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMascota\": 1,\n  \"idEmpleadoAsignado\": 1,\n  \"fechaConsulta\": \"2024-02-01T10:00:00Z\",\n  \"motivoConsulta\": \"Control general\",\n  \"anamnesis\": \"Mascota presenta buen estado general\",\n  \"tratamiento\": \"Control de rutina\",\n  \"observaciones\": \"Próxima visita en 6 meses\",\n  \"diagnosticos\": [1],\n  \"examenFisico\": {\n    \"temperatura\": 38.5,\n    \"frecuenciaCardiaca\": 80,\n    \"frecuenciaRespiratoria\": 25,\n    \"peso\": 15.5,\n    \"condicionCorporal\": \"Normal\",\n    \"hidratacion\": \"Adecuada\",\n    \"mucosas\": \"Rosadas\",\n    \"linfonodos\": \"Normales\",\n    \"observaciones\": \"Sin alteraciones\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{url}}/historial-clinico/create",
+              "host": ["{{url}}"],
+              "path": ["historial-clinico", "create"]
+            },
+            "description": "Crear nuevo historial clínico"
+          },
+          "response": []
+        },
+        {
+          "name": "06.02 - Update Historial Clinico",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tratamiento\": \"Control de rutina - Actualizado\",\n  \"observaciones\": \"Próxima visita en 3 meses\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/historial-clinico/update/{{historialClinicoId}}",
+              "host": ["{{url}}"],
+              "path": ["historial-clinico", "update", "{{historialClinicoId}}"]
+            },
+            "description": "Actualizar historial clínico existente"
+          },
+          "response": []
+        },
+        {
+          "name": "06.03 - Get Historial Clinico",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/historial-clinico/get/{{historialClinicoId}}",
+              "host": ["{{url}}"],
+              "path": ["historial-clinico", "get", "{{historialClinicoId}}"]
+            },
+            "description": "Obtener historial clínico por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "06.04 - List Historiales Clinicos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/historial-clinico/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["historial-clinico", "list"],
+              "query": [
+                {
+                  "key": "idMascota",
+                  "value": "",
+                  "description": "Filtrar por mascota",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleadoAsignado",
+                  "value": "",
+                  "description": "Filtrar por veterinario",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar historiales clínicos con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "06.05 - Delete Historial Clinico",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/historial-clinico/delete/{{historialClinicoId}}",
+              "host": ["{{url}}"],
+              "path": ["historial-clinico", "delete", "{{historialClinicoId}}"]
+            },
+            "description": "Eliminar historial clínico (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "06.06 - List Diagnosticos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/diagnostico/list",
+              "host": ["{{url}}"],
+              "path": ["diagnostico", "list"]
+            },
+            "description": "Listar diagnósticos disponibles"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - 💉 Vacuna",
+      "item": [
+        {
+          "name": "07.01 - Create Vacuna",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('vacunaId', response.data.id);",
+                  "        console.log('Vacuna ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMascota\": 1,\n  \"idEmpleado\": 1,\n  \"idVacunaTipo\": 1,\n  \"fechaAplicacion\": \"2024-02-01\",\n  \"fechaProximaAplicacion\": \"2025-02-01\",\n  \"lote\": \"LOTE12345\",\n  \"observaciones\": \"Primera dosis aplicada sin complicaciones\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/vacuna/create",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "create"]
+            },
+            "description": "Crear nuevo registro de vacunación"
+          },
+          "response": []
+        },
+        {
+          "name": "07.02 - Update Vacuna",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaProximaAplicacion\": \"2025-03-01\",\n  \"observaciones\": \"Fecha de próxima dosis actualizada\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/vacuna/update/{{vacunaId}}",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "update", "{{vacunaId}}"]
+            },
+            "description": "Actualizar registro de vacunación existente"
+          },
+          "response": []
+        },
+        {
+          "name": "07.03 - Get Vacuna",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/vacuna/get/{{vacunaId}}",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "get", "{{vacunaId}}"]
+            },
+            "description": "Obtener vacuna por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "07.04 - List Vacunas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/vacuna/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "list"],
+              "query": [
+                {
+                  "key": "idMascota",
+                  "value": "",
+                  "description": "Filtrar por mascota",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por empleado",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango de fechaAplicacion (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango de fechaAplicacion (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesdeProximaAplicacion",
+                  "value": "",
+                  "description": "Fecha inicio del rango de fechaProximaAplicacion (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHastaProximaAplicacion",
+                  "value": "",
+                  "description": "Fecha fin del rango de fechaProximaAplicacion (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar vacunas con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "07.05 - Delete Vacuna",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/vacuna/delete/{{vacunaId}}",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "delete", "{{vacunaId}}"]
+            },
+            "description": "Eliminar vacuna (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "07.06 - List Tipos de Vacuna",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/vacuna/tipo/list",
+              "host": ["{{url}}"],
+              "path": ["vacuna", "tipo", "list"]
+            },
+            "description": "Listar tipos de vacuna"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - 📅 Turno",
+      "item": [
+        {
+          "name": "08.01 - Create Turno",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('turnoId', response.data.id);",
+                  "        console.log('Turno ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMascota\": 1,\n  \"idEmpleadoAsignado\": 1,\n  \"idTurnoTipo\": 1,\n  \"idTurnoEstado\": 1,\n  \"fechaHora\": \"2024-03-15T10:00:00Z\",\n  \"duracionMinutos\": 30,\n  \"motivo\": \"Consulta de control\",\n  \"observaciones\": \"Primera consulta del año\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/turno/create",
+              "host": ["{{url}}"],
+              "path": ["turno", "create"]
+            },
+            "description": "Crear nuevo turno"
+          },
+          "response": []
+        },
+        {
+          "name": "08.02 - Update Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idTurnoEstado\": 2,\n  \"observaciones\": \"Turno confirmado por el cliente\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/turno/update/{{turnoId}}",
+              "host": ["{{url}}"],
+              "path": ["turno", "update", "{{turnoId}}"]
+            },
+            "description": "Actualizar turno existente"
+          },
+          "response": []
+        },
+        {
+          "name": "08.03 - Get Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/get/{{turnoId}}",
+              "host": ["{{url}}"],
+              "path": ["turno", "get", "{{turnoId}}"]
+            },
+            "description": "Obtener turno por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "08.04 - List Turnos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["turno", "list"],
+              "query": [
+                {
+                  "key": "idMascota",
+                  "value": "",
+                  "description": "Filtrar por mascota",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleadoAsignado",
+                  "value": "",
+                  "description": "Filtrar por veterinario",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "idTurnoEstado",
+                  "value": "",
+                  "description": "Filtrar por estados (CSV de IDs, ej: 1,2,3)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar turnos con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "08.05 - Get Turnos Disponibles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/disponibles?fechaDesde=2024-03-15T08:00:00Z&fechaHasta=2024-03-15T18:00:00Z&duracionMinutos=30",
+              "host": ["{{url}}"],
+              "path": ["turno", "disponibles"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "2024-03-15T08:00:00Z",
+                  "description": "Fecha inicio (ISO 8601) - REQUERIDO"
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "2024-03-15T18:00:00Z",
+                  "description": "Fecha fin (ISO 8601) - REQUERIDO"
+                },
+                {
+                  "key": "idEmpleadoAsignado",
+                  "value": "",
+                  "description": "Filtrar por veterinario",
+                  "disabled": true
+                },
+                {
+                  "key": "duracionMinutos",
+                  "value": "30",
+                  "description": "Duración del turno en minutos (default: 30)"
+                }
+              ]
+            },
+            "description": "Obtener horarios disponibles para agendar turnos"
+          },
+          "response": []
+        },
+        {
+          "name": "08.06 - Delete Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/delete/{{turnoId}}",
+              "host": ["{{url}}"],
+              "path": ["turno", "delete", "{{turnoId}}"]
+            },
+            "description": "Eliminar turno (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "08.07 - List Tipos de Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/tipo/list",
+              "host": ["{{url}}"],
+              "path": ["turno", "tipo", "list"]
+            },
+            "description": "Listar tipos de turno"
+          },
+          "response": []
+        },
+        {
+          "name": "08.08 - List Estados de Turno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/turno/estado/list",
+              "host": ["{{url}}"],
+              "path": ["turno", "estado", "list"]
+            },
+            "description": "Listar estados de turno"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 - 📦 Stock",
+      "item": [
+        {
+          "name": "09.01 - Create Producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('productoId', response.data.id);",
+                  "        console.log('Producto ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Antibiótico X 500mg\",\n  \"descripcion\": \"Antibiótico de amplio espectro\",\n  \"codigo\": \"ANT-500\",\n  \"codigoInterno\": \"MED001\",\n  \"precioVenta\": 150.00,\n  \"precioCosto\": 90.00,\n  \"stockActual\": 50,\n  \"stockMinimo\": 10,\n  \"fechaVencimiento\": \"2025-12-31\",\n  \"idCategoria\": 1\n}"
+            },
+            "url": {
+              "raw": "{{url}}/producto/create",
+              "host": ["{{url}}"],
+              "path": ["producto", "create"]
+            },
+            "description": "Crear nuevo producto"
+          },
+          "response": []
+        },
+        {
+          "name": "09.02 - Update Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Antibiótico X 500mg - Actualizado\",\n  \"precioVenta\": 160.00,\n  \"stockMinimo\": 15\n}"
+            },
+            "url": {
+              "raw": "{{url}}/producto/update/{{productoId}}",
+              "host": ["{{url}}"],
+              "path": ["producto", "update", "{{productoId}}"]
+            },
+            "description": "Actualizar producto existente"
+          },
+          "response": []
+        },
+        {
+          "name": "09.03 - Get Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/get/{{productoId}}",
+              "host": ["{{url}}"],
+              "path": ["producto", "get", "{{productoId}}"]
+            },
+            "description": "Obtener producto por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "09.04 - List Productos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["producto", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "idCategoria",
+                  "value": "",
+                  "description": "Filtrar por categoría",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar productos con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "09.05 - Delete Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/delete/{{productoId}}",
+              "host": ["{{url}}"],
+              "path": ["producto", "delete", "{{productoId}}"]
+            },
+            "description": "Eliminar producto (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "09.06 - List Categorias de Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/categoria/list",
+              "host": ["{{url}}"],
+              "path": ["producto", "categoria", "list"]
+            },
+            "description": "Listar categorías de producto"
+          },
+          "response": []
+        },
+        {
+          "name": "09.07 - Reporte Stock Bajo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/reportes/stock-bajo",
+              "host": ["{{url}}"],
+              "path": ["producto", "reportes", "stock-bajo"]
+            },
+            "description": "Reporte de productos con stock por debajo del mínimo configurado"
+          },
+          "response": []
+        },
+        {
+          "name": "09.08 - Reporte Proximos a Vencer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/reportes/proximos-vencer?dias=30",
+              "host": ["{{url}}"],
+              "path": ["producto", "reportes", "proximos-vencer"],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30",
+                  "description": "Cantidad de dias hacia el futuro para buscar proximos a vencer (default: 30)"
+                }
+              ]
+            },
+            "description": "Reporte de productos con fecha de vencimiento proxima"
+          },
+          "response": []
+        },
+        {
+          "name": "09.09 - Reporte Valorizacion Inventario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/producto/reportes/valorizacion",
+              "host": ["{{url}}"],
+              "path": ["producto", "reportes", "valorizacion"]
+            },
+            "description": "Reporte de valorizacion total del inventario (costo y precio de venta)"
+          },
+          "response": []
+        },
+        {
+          "name": "09.10 - Create Servicio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('servicioId', response.data.id);",
+                  "        console.log('Servicio ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Consulta General\",\n  \"descripcion\": \"Consulta veterinaria general\",\n  \"codigoInterno\": \"SERV001\",\n  \"precio\": 300.00,\n  \"duracionMinutos\": 30\n}"
+            },
+            "url": {
+              "raw": "{{url}}/servicio/create",
+              "host": ["{{url}}"],
+              "path": ["servicio", "create"]
+            },
+            "description": "Crear nuevo servicio"
+          },
+          "response": []
+        },
+        {
+          "name": "09.11 - Update Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Consulta General - Actualizado\",\n  \"precio\": 350.00\n}"
+            },
+            "url": {
+              "raw": "{{url}}/servicio/update/{{servicioId}}",
+              "host": ["{{url}}"],
+              "path": ["servicio", "update", "{{servicioId}}"]
+            },
+            "description": "Actualizar servicio existente"
+          },
+          "response": []
+        },
+        {
+          "name": "09.12 - Get Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/servicio/get/{{servicioId}}",
+              "host": ["{{url}}"],
+              "path": ["servicio", "get", "{{servicioId}}"]
+            },
+            "description": "Obtener servicio por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "09.13 - List Servicios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/servicio/list?limit=100&offset=0&activo=true",
+              "host": ["{{url}}"],
+              "path": ["servicio", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "description": "Filtrar por estado activo/inactivo"
+                }
+              ]
+            },
+            "description": "Listar servicios con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "09.14 - Delete Servicio",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/servicio/delete/{{servicioId}}",
+              "host": ["{{url}}"],
+              "path": ["servicio", "delete", "{{servicioId}}"]
+            },
+            "description": "Eliminar servicio (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "09.15 - Create Movimiento Stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('movimientoStockId', response.data.id);",
+                  "        console.log('Movimiento Stock ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 20,\n  \"observaciones\": \"Compra de reposición\",\n  \"idProducto\": 1,\n  \"idMovimientoTipo\": 1,\n  \"idEmpleado\": 1\n}"
+            },
+            "url": {
+              "raw": "{{url}}/stock/movimiento/create",
+              "host": ["{{url}}"],
+              "path": ["stock", "movimiento", "create"]
+            },
+            "description": "Crear nuevo movimiento de stock"
+          },
+          "response": []
+        },
+        {
+          "name": "09.16 - List Movimientos Stock",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/stock/movimiento/list?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["stock", "movimiento", "list"],
+              "query": [
+                {
+                  "key": "idProducto",
+                  "value": "",
+                  "description": "Filtrar por producto",
+                  "disabled": true
+                },
+                {
+                  "key": "idMovimientoTipo",
+                  "value": "",
+                  "description": "Filtrar por tipo de movimiento",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listar movimientos de stock con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "09.17 - Get Kardex Producto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/stock/producto/{{productoId}}/kardex?fechaDesde=&fechaHasta=&limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["stock", "producto", "{{productoId}}", "kardex"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Obtener historial de movimientos (kardex) de un producto con saldo progresivo"
+          },
+          "response": []
+        },
+        {
+          "name": "09.18 - List Tipos Movimiento Stock",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/stock/movimiento/tipo/list",
+              "host": ["{{url}}"],
+              "path": ["stock", "movimiento", "tipo", "list"]
+            },
+            "description": "Listar tipos de movimiento de stock"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 - 💰 Venta",
+      "item": [
+        {
+          "name": "10.01 - Create Venta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('ventaId', response.data.id);",
+                  "        console.log('Venta ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": 1,\n  \"idEmpleado\": 1,\n  \"montoAjusteRedondeo\": 0.50,\n  \"detalles\": [\n    {\n      \"idProducto\": 1,\n      \"cantidad\": 2\n    },\n    {\n      \"idServicio\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/venta/create",
+              "host": ["{{url}}"],
+              "path": ["venta", "create"]
+            },
+            "description": "Crear nueva venta con productos y/o servicios"
+          },
+          "response": []
+        },
+        {
+          "name": "10.02 - Update Venta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montoAjusteRedondeo\": 1.00,\n  \"detalles\": [\n    {\n      \"idProducto\": 1,\n      \"cantidad\": 3\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/venta/update/{{ventaId}}",
+              "host": ["{{url}}"],
+              "path": ["venta", "update", "{{ventaId}}"]
+            },
+            "description": "Actualizar venta existente (solo si está en estado Pendiente)"
+          },
+          "response": []
+        },
+        {
+          "name": "10.03 - Get Venta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/venta/get/{{ventaId}}",
+              "host": ["{{url}}"],
+              "path": ["venta", "get", "{{ventaId}}"]
+            },
+            "description": "Obtener venta por ID con detalles y pagos"
+          },
+          "response": []
+        },
+        {
+          "name": "10.04 - List Ventas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/venta/list?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["venta", "list"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Término de búsqueda (cliente, empleado)",
+                  "disabled": true
+                },
+                {
+                  "key": "idCliente",
+                  "value": "",
+                  "description": "Filtrar por cliente",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por empleado",
+                  "disabled": true
+                },
+                {
+                  "key": "idEstado",
+                  "value": "",
+                  "description": "Filtrar por estado",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin del rango (ISO 8601)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listar ventas con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "10.05 - Anular Venta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idAnulacionVentaMotivo\": 1,\n  \"idEmpleado\": 1,\n  \"observaciones\": \"Cliente solicitó anulación\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/venta/anular/{{ventaId}}",
+              "host": ["{{url}}"],
+              "path": ["venta", "anular", "{{ventaId}}"]
+            },
+            "description": "Anular venta y revertir movimientos de stock"
+          },
+          "response": []
+        },
+        {
+          "name": "10.06 - List Estados Venta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/venta/estado/list",
+              "host": ["{{url}}"],
+              "path": ["venta", "estado", "list"]
+            },
+            "description": "Listar estados de venta"
+          },
+          "response": []
+        },
+        {
+          "name": "10.07 - List Motivos Anulacion Venta",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/venta/anulacion/motivo/list",
+              "host": ["{{url}}"],
+              "path": ["venta", "anulacion", "motivo", "list"]
+            },
+            "description": "Listar motivos de anulación de venta"
+          },
+          "response": []
+        },
+        {
+          "name": "10.08 - Create Pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('pagoId', response.data.id);",
+                  "        console.log('Pago ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 500.00,\n  \"montoBonificado\": 0,\n  \"referencia\": \"PAGO-001\",\n  \"idMetodoPago\": 1,\n  \"idVenta\": 1,\n  \"idEstado\": 1\n}"
+            },
+            "url": {
+              "raw": "{{url}}/pago/create",
+              "host": ["{{url}}"],
+              "path": ["pago", "create"]
+            },
+            "description": "Registrar pago para una venta"
+          },
+          "response": []
+        },
+        {
+          "name": "10.09 - Update Estado Pago",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEstado\": 1\n}"
+            },
+            "url": {
+              "raw": "{{url}}/pago/{{pagoId}}/estado",
+              "host": ["{{url}}"],
+              "path": ["pago", "{{pagoId}}", "estado"]
+            },
+            "description": "Actualizar estado de pago. Roles requeridos: ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)"
+          },
+          "response": []
+        },
+        {
+          "name": "10.10 - List Pagos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/pago/list?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["pago", "list"],
+              "query": [
+                {
+                  "key": "idVenta",
+                  "value": "",
+                  "description": "Filtrar por venta",
+                  "disabled": true
+                },
+                {
+                  "key": "idMetodoPago",
+                  "value": "",
+                  "description": "Filtrar por método de pago",
+                  "disabled": true
+                },
+                {
+                  "key": "idEstado",
+                  "value": "",
+                  "description": "Filtrar por estado",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listar pagos con filtros opcionales"
+          },
+          "response": []
+        },
+        {
+          "name": "10.11 - List Metodos Pago",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/pago/metodo/list",
+              "host": ["{{url}}"],
+              "path": ["pago", "metodo", "list"]
+            },
+            "description": "Listar métodos de pago activos"
+          },
+          "response": []
+        },
+        {
+          "name": "10.12 - List Estados Pago",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/pago/estados",
+              "host": ["{{url}}"],
+              "path": ["pago", "estados"]
+            },
+            "description": "Listar estados de pago"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 - 📎 Adjunto",
+      "item": [
+        {
+          "name": "11.01 - Upload Adjunto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.id) {",
+                  "        pm.environment.set('adjuntoId', response.data.id);",
+                  "        console.log('Adjunto ID guardado:', response.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Archivo a subir (máximo 25 MB)"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Descripción del archivo",
+                  "type": "text",
+                  "description": "Descripción del archivo (requerido, máx 250 caracteres)"
+                },
+                {
+                  "key": "idAdjuntoTipo",
+                  "value": "1",
+                  "type": "text",
+                  "description": "ID del tipo de adjunto (requerido)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{url}}/adjunto/upload",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "upload"]
+            },
+            "description": "Subir archivo adjunto. Imágenes: jpg, jpeg, png, gif, bmp, webp, svg, tiff, tif. Documentos: pdf, doc, docx, xls, xlsx, ppt, pptx, txt, csv, rtf, odt, ods. Máximo 25 MB."
+          },
+          "response": []
+        },
+        {
+          "name": "11.02 - Update Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Descripción actualizada del archivo\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/adjunto/update/{{adjuntoId}}",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "update", "{{adjuntoId}}"]
+            },
+            "description": "Actualizar metadata de adjunto"
+          },
+          "response": []
+        },
+        {
+          "name": "11.03 - Get Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/get/{{adjuntoId}}",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "get", "{{adjuntoId}}"]
+            },
+            "description": "Obtener información de adjunto (sin datos binarios)"
+          },
+          "response": []
+        },
+        {
+          "name": "11.04 - List Adjuntos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/list?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "list"],
+              "query": [
+                {
+                  "key": "idAdjuntoTipo",
+                  "value": "",
+                  "description": "Filtrar por tipo",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad máxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Cantidad de resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listar adjuntos con filtros opcionales (sin datos binarios)"
+          },
+          "response": []
+        },
+        {
+          "name": "11.05 - Download Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/download/{{adjuntoId}}",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "download", "{{adjuntoId}}"]
+            },
+            "description": "Descargar archivo adjunto"
+          },
+          "response": []
+        },
+        {
+          "name": "11.06 - View Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/view/{{adjuntoId}}",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "view", "{{adjuntoId}}"]
+            },
+            "description": "Ver archivo adjunto (inline en navegador)"
+          },
+          "response": []
+        },
+        {
+          "name": "11.07 - Delete Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/delete/{{adjuntoId}}",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "delete", "{{adjuntoId}}"]
+            },
+            "description": "Eliminar adjunto"
+          },
+          "response": []
+        },
+        {
+          "name": "11.08 - List Tipos de Adjunto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/tipo/list",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "tipo", "list"],
+              "query": [
+                {
+                  "key": "idReferencia",
+                  "value": "",
+                  "description": "Filtrar por referencia",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Listar tipos de adjunto"
+          },
+          "response": []
+        },
+        {
+          "name": "11.09 - List Referencias",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/adjunto/referencia/list",
+              "host": ["{{url}}"],
+              "path": ["adjunto", "referencia", "list"]
+            },
+            "description": "Listar referencias de adjunto"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12 - 📊 Reporte",
+      "item": [
+        {
+          "name": "12.01 - Reporte Turnos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/turnos?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["reporte", "turnos"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por empleado",
+                  "disabled": true
+                },
+                {
+                  "key": "idEstado",
+                  "value": "",
+                  "description": "Filtrar por estado del turno",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad maxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listado de turnos para reporte con filtros opcionales por fecha, empleado y estado"
+          },
+          "response": []
+        },
+        {
+          "name": "12.02 - Exportar Turnos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/turnos/export?formato=xlsx",
+              "host": ["{{url}}"],
+              "path": ["reporte", "turnos", "export"],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xlsx",
+                  "description": "Formato: xlsx o csv"
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por empleado",
+                  "disabled": true
+                },
+                {
+                  "key": "idEstado",
+                  "value": "",
+                  "description": "Filtrar por estado del turno",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "description": "Cantidad maxima de resultados",
+                  "disabled": true
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "description": "Resultados a omitir",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Descarga el reporte de turnos como archivo XLSX o CSV"
+          },
+          "response": []
+        },
+        {
+          "name": "12.03 - Reporte Historiales Clinicos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/historiales-clinicos?limit=100&offset=0",
+              "host": ["{{url}}"],
+              "path": ["reporte", "historiales-clinicos"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por veterinario",
+                  "disabled": true
+                },
+                {
+                  "key": "idMascota",
+                  "value": "",
+                  "description": "Filtrar por mascota",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "description": "Cantidad maxima de resultados"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Resultados a omitir"
+                }
+              ]
+            },
+            "description": "Listado de historiales clinicos para reporte con diagnosticos y examen fisico"
+          },
+          "response": []
+        },
+        {
+          "name": "12.04 - Exportar Historiales Clinicos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/historiales-clinicos/export?formato=xlsx",
+              "host": ["{{url}}"],
+              "path": ["reporte", "historiales-clinicos", "export"],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xlsx",
+                  "description": "Formato: xlsx o csv"
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "idEmpleado",
+                  "value": "",
+                  "description": "Filtrar por veterinario",
+                  "disabled": true
+                },
+                {
+                  "key": "idMascota",
+                  "value": "",
+                  "description": "Filtrar por mascota",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "description": "Cantidad maxima de resultados",
+                  "disabled": true
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "description": "Resultados a omitir",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Descarga el reporte de historiales clinicos como archivo XLSX o CSV"
+          },
+          "response": []
+        },
+        {
+          "name": "12.05 - Reporte Productos Mas Vendidos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/productos-mas-vendidos?limit=10",
+              "host": ["{{url}}"],
+              "path": ["reporte", "productos-mas-vendidos"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Cantidad maxima de resultados (top N)"
+                }
+              ]
+            },
+            "description": "Ranking de productos y servicios mas vendidos ordenado por cantidad total"
+          },
+          "response": []
+        },
+        {
+          "name": "12.06 - Exportar Productos Mas Vendidos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/productos-mas-vendidos/export?formato=xlsx&limit=10",
+              "host": ["{{url}}"],
+              "path": ["reporte", "productos-mas-vendidos", "export"],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xlsx",
+                  "description": "Formato: xlsx o csv"
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Cantidad maxima de resultados (top N)"
+                }
+              ]
+            },
+            "description": "Descarga el ranking de productos y servicios mas vendidos como archivo XLSX o CSV"
+          },
+          "response": []
+        },
+        {
+          "name": "12.07 - Reporte Ganancias",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/ganancias?agruparPor=mes",
+              "host": ["{{url}}"],
+              "path": ["reporte", "ganancias"],
+              "query": [
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "agruparPor",
+                  "value": "mes",
+                  "description": "Granularidad: dia, mes, anio"
+                }
+              ]
+            },
+            "description": "Analisis de ingresos brutos, costos y ganancia neta agrupado por periodo"
+          },
+          "response": []
+        },
+        {
+          "name": "12.08 - Exportar Ganancias",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/ganancias/export?formato=xlsx&agruparPor=mes",
+              "host": ["{{url}}"],
+              "path": ["reporte", "ganancias", "export"],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xlsx",
+                  "description": "Formato: xlsx o csv"
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "",
+                  "description": "Fecha inicio (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "",
+                  "description": "Fecha fin (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "agruparPor",
+                  "value": "mes",
+                  "description": "Granularidad: dia, mes, anio"
+                }
+              ]
+            },
+            "description": "Descarga el reporte de ganancias como archivo XLSX o CSV"
+          },
+          "response": []
+        },
+        {
+          "name": "12.09 - Reporte Stock Bajo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/stock-bajo",
+              "host": ["{{url}}"],
+              "path": ["reporte", "stock-bajo"],
+              "query": []
+            },
+            "description": "Listado de productos cuyo stock actual es igual o menor al stock minimo configurado"
+          },
+          "response": []
+        },
+        {
+          "name": "12.10 - Exportar Stock Bajo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/reporte/stock-bajo/export?formato=xlsx",
+              "host": ["{{url}}"],
+              "path": ["reporte", "stock-bajo", "export"],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xlsx",
+                  "description": "Formato: xlsx o csv"
+                }
+              ]
+            },
+            "description": "Descarga el reporte de stock bajo como archivo XLSX o CSV"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "personaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuarioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "empleadoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mascotaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "historialClinicoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vacunaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "turnoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adjuntoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "servicioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "movimientoStockId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ventaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pagoId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

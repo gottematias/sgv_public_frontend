@@ -1,0 +1,294 @@
+# OpenAPI Shared Components
+# This file contains shared parameters, responses, schemas, and security schemes
+# used across all API module files.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido de /auth/login
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: ID del recurso
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 10000
+      description: Cantidad máxima de resultados
+    OffsetParam:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: Cantidad de resultados a omitir
+    ActivoParam:
+      name: activo
+      in: query
+      schema:
+        type: boolean
+        default: true
+      description: Filtrar por estado activo/inactivo
+    SearchQueryParam:
+      name: q
+      in: query
+      schema:
+        type: string
+        minLength: 1
+      description: Término de búsqueda (opcional)
+
+  responses:
+    BadRequest:
+      description: Solicitud inválida - Error de validación
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          example:
+            data: null
+            code: 400
+            error: El campo 'nombres' es requerido
+    Unauthorized:
+      description: No autorizado - Token JWT inválido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          example:
+            data: null
+            code: 401
+            error: No autorizado
+    Forbidden:
+      description: Acceso denegado - El usuario no tiene los permisos necesarios
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          examples:
+            insufficient_role:
+              summary: Rol insuficiente
+              value:
+                data: null
+                code: 403
+                error: "Acceso denegado. Se requiere uno de los siguientes roles: [role_ids]"
+            default_user_protection:
+              summary: Protección usuario por defecto
+              value:
+                data: null
+                code: 403
+                error: "No se puede realizar esta operación sobre el usuario por defecto"
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          example:
+            data: null
+            code: 404
+            error: Recurso no encontrado
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          example:
+            data: null
+            code: 500
+            error: Error interno del servidor
+    TooManyRequests:
+      description: Demasiadas solicitudes - Se excedió el límite de tasa
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResponseDTOError"
+          example:
+            data: null
+            code: 429
+            error: Demasiadas solicitudes. Por favor, intente más tarde
+
+  schemas:
+    ResponseDTOError:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: object
+          nullable: true
+          description: Null for error responses
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOId:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: integer
+          description: ID del recurso creado/modificado
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTONull:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: object
+          nullable: true
+          example: null
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOToken:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/TokenResponse"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    TokenResponse:
+      type: object
+      required:
+        - token
+        - exp
+      properties:
+        token:
+          type: string
+          description: |
+            Token JWT. Al decodificarlo contiene el payload con información del usuario autenticado.
+            Ver schema `JwtPayload` para estructura completa del payload.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        exp:
+          type: string
+          format: date-time
+          description: Fecha de expiración del token
+          example: "2026-02-15T04:45:22.000Z"
+    JwtPayload:
+      type: object
+      description: |
+        Estructura del payload contenido en el JWT (decodificado).
+        Este payload está firmado y no debe ser modificado en el cliente.
+        Contiene información del usuario autenticado para uso en el frontend.
+      required:
+        - usuario_id
+        - usuario_nombre
+        - persona_id
+        - persona_nombre
+        - persona_apellido
+        - rol_id
+        - iat
+        - exp
+      properties:
+        usuario_id:
+          type: integer
+          description: ID del usuario en la tabla usuario
+          example: 1
+        usuario_nombre:
+          type: string
+          description: Nombre de usuario (username)
+          example: admin
+        persona_id:
+          type: integer
+          description: ID de la persona asociada al usuario
+          example: 1
+        persona_nombre:
+          type: string
+          description: Nombres de la persona (nombres de pila)
+          example: Juan Carlos
+        persona_apellido:
+          type: string
+          description: Apellidos de la persona
+          example: García López
+        rol_id:
+          type: array
+          description: Lista de IDs de roles asignados al usuario
+          items:
+            type: integer
+          example: [1, 3]
+        iat:
+          type: integer
+          description: Timestamp de emisión del token (issued at)
+          example: 1739620800
+        exp:
+          type: integer
+          description: Timestamp de expiración del token
+          example: 1739624400
+    LoginDto:
+      type: object
+      required:
+        - usuario
+        - contrasena
+      properties:
+        usuario:
+          type: string
+          minLength: 4
+          description: Nombre de usuario
+          example: admin
+        contrasena:
+          type: string
+          minLength: 4
+          description: Contraseña
+          example: admin123
+    SexoEnum:
+      type: string
+      enum:
+        - M
+        - F
+        - I
+      description: "M=Macho, F=Hembra, I=Indeterminado"
+    BackupInfo:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: Nombre del archivo de backup
+          example: backup_veterinaria_2026-03-18T03-00-00-000Z.bak
+        fecha:
+          type: string
+          format: date-time
+          description: Fecha y hora de creación del backup
+          example: "2026-03-18T03:00:00.000Z"
+        tamano:
+          type: integer
+          description: Tamaño del archivo en bytes
+          example: 524288

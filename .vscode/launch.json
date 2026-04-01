@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: start",
+      "postDebugTask": "terminate-angular-server",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "skipFiles": [
+        "${workspaceFolder}/node_modules/**/*.js",
+        "<node_internals>/**/*.js"
+      ]
+    }
+  ]
+}

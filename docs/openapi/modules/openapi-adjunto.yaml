@@ -1,0 +1,454 @@
+# OpenAPI Adjunto Module
+# This file contains all Adjunto-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Adjunto Module
+  version: 1.0.0
+  description: Módulo de gestión de archivos adjuntos
+
+paths:
+  /adjunto/upload:
+    post:
+      tags:
+        - Adjunto
+      summary: Subir archivo
+      description: >
+        Sube un archivo adjunto al sistema.
+
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+
+
+        **Validaciones:**
+
+        - Tamaño máximo: 25 MB (26,214,400 bytes)
+
+        - **Imágenes**: jpg, jpeg, png, gif, bmp, webp, svg, tiff, tif
+
+        - **Documentos**: pdf, doc, docx, xls, xlsx, ppt, pptx, txt, csv, rtf,
+        odt, ods
+
+        - El tipo MIME del archivo debe corresponder con la extensión
+
+        - El idAdjuntoTipo debe corresponder con el tipo de archivo
+      operationId: adjuntoUpload
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - descripcion
+                - idAdjuntoTipo
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: >
+                    Archivo a subir. Máximo 25 MB.
+
+
+                    Extensiones de imagen: jpg, jpeg, png, gif, bmp, webp, svg,
+                    tiff, tif
+
+
+                    Extensiones de documento: pdf, doc, docx, xls, xlsx, ppt,
+                    pptx, txt, csv, rtf, odt, ods
+                descripcion:
+                  type: string
+                  minLength: 1
+                  maxLength: 250
+                  description: Descripción del archivo (requerido)
+                idAdjuntoTipo:
+                  type: integer
+                  description: |
+                    Tipo de adjunto. Debe corresponder con el tipo de archivo.
+                    Usar GET /adjunto/tipo/list para obtener tipos disponibles
+      responses:
+        "201":
+          description: Archivo subido exitosamente - Retorna el ID del adjunto creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          description: >
+            Solicitud inválida - Posibles causas:
+
+            - Archivo no proporcionado o vacío
+
+            - Tamaño excede 25 MB
+
+            - Extensión de archivo no permitida
+
+            - Tipo MIME no coincide con la extensión
+
+            - idAdjuntoTipo inválido, no existe, o no corresponde con el tipo de
+            archivo
+
+            - Campo descripcion vacío o excede 250 caracteres
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/adjunto/download/{id}":
+    get:
+      tags:
+        - Adjunto
+      summary: Descargar archivo
+      operationId: adjuntoDownload
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Archivo descargado
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/adjunto/view/{id}":
+    get:
+      tags:
+        - Adjunto
+      summary: Ver archivo (inline)
+      operationId: adjuntoView
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Archivo para visualización
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/adjunto/update/{id}":
+    put:
+      tags:
+        - Adjunto
+      summary: Actualizar metadata de adjunto
+      description: |
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: adjuntoUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAdjuntoDto"
+      responses:
+        "200":
+          description: Adjunto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/adjunto/get/{id}":
+    get:
+      tags:
+        - Adjunto
+      summary: Obtener info de adjunto (sin datos binarios)
+      operationId: adjuntoGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Info del adjunto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAdjunto"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /adjunto/list:
+    get:
+      tags:
+        - Adjunto
+      summary: Listar adjuntos (sin datos binarios)
+      operationId: adjuntoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - name: idAdjuntoTipo
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por tipo
+      responses:
+        "200":
+          description: Lista de adjuntos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAdjuntoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/adjunto/delete/{id}":
+    delete:
+      tags:
+        - Adjunto
+      summary: Eliminar adjunto
+      description: |
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: adjuntoDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Adjunto eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /adjunto/tipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de adjunto
+      operationId: adjuntoTipoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idReferencia
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por referencia
+      responses:
+        "200":
+          description: Lista de tipos de adjunto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAdjuntoTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /adjunto/referencia/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar referencias de adjunto
+      operationId: adjuntoReferenciaList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de referencias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReferenciaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      $ref: "../openapi-shared.yaml#/components/securitySchemes/BearerAuth"
+
+  schemas:
+    Referencia:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOReferenciaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Referencia"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    AdjuntoTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+        idReferencia:
+          type: integer
+          nullable: true
+        referencia:
+          $ref: "#/components/schemas/Referencia"
+    ResponseDTOAdjuntoTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdjuntoTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Adjunto:
+      type: object
+      required:
+        - id
+        - nombre
+        - extension
+        - mime
+        - tamanioBytes
+        - fechaCarga
+        - descripcion
+        - idAdjuntoTipo
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 250
+        extension:
+          type: string
+          maxLength: 10
+        mime:
+          type: string
+          maxLength: 150
+        tamanioBytes:
+          type: string
+          description: Tamaño en bytes (bigint como string)
+        fechaCarga:
+          type: string
+          format: date-time
+        descripcion:
+          type: string
+          maxLength: 250
+        idAdjuntoTipo:
+          type: integer
+        adjuntoTipo:
+          $ref: "#/components/schemas/AdjuntoTipo"
+    CreateAdjuntoDto:
+      type: object
+      required:
+        - descripcion
+        - idAdjuntoTipo
+      properties:
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 250
+          description: Descripción del archivo
+          example: Certificado de vacunación 2026
+        idAdjuntoTipo:
+          type: integer
+          description: ID del tipo de adjunto
+          example: 1
+      description: >-
+        DTO para crear adjunto (usado en multipart/form-data, el archivo se
+        envía como binary)
+    UpdateAdjuntoDto:
+      type: object
+      properties:
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 250
+        idAdjuntoTipo:
+          type: integer
+    ResponseDTOAdjunto:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Adjunto"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOAdjuntoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Adjunto"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

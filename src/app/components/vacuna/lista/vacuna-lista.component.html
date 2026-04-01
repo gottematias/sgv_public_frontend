@@ -1,0 +1,202 @@
+<p-confirmDialog
+  [key]="'vacunaLista'"
+  position="top"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<div class="card flex flex-column h-full">
+  <div class="flex p-2 gap-3 flex-wrap">
+    @if (puedeVerActivo) {
+      <p-select
+        [options]="filtrosActivo"
+        [(ngModel)]="filtroActivoSeleccionado"
+        optionLabel="label"
+        (onChange)="onFiltroActivoChange()"
+        placeholder="Filtrar por estado"
+        [style]="{ width: '140px' }"
+        pTooltip="Filtrar por estado activo/inactivo"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-select>
+    }
+
+    <p-select
+      [options]="mascotas"
+      [(ngModel)]="filtroMascotaSeleccionada"
+      (onChange)="onFiltroMascotaChange()"
+      (onClear)="onFiltroMascotaChange()"
+      placeholder="Filtrar por mascota"
+      optionLabel="nombre"
+      optionValue="id"
+      [showClear]="true"
+      [filter]="true"
+      [style]="{ width: '250px' }"
+      pTooltip="Filtrar por mascota"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    >
+      <ng-template let-mascota pTemplate="item">
+        {{ mascota.nombre }}
+        <span *ngIf="mascota.persona">
+          ({{ mascota.persona.apellidos }}, {{ mascota.persona.nombres }})
+        </span>
+      </ng-template>
+    </p-select>
+
+    <p-select
+      [options]="empleados"
+      [(ngModel)]="filtroEmpleadoSeleccionado"
+      (onChange)="onFiltroEmpleadoChange()"
+      (onClear)="onFiltroEmpleadoChange()"
+      placeholder="Filtrar por veterinario"
+      optionValue="id"
+      [showClear]="true"
+      [filter]="true"
+      [style]="{ width: '250px' }"
+      pTooltip="Filtrar por veterinario"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    >
+      <ng-template let-empleado pTemplate="item">
+        {{ getEmpleadoLabel(empleado) }}
+      </ng-template>
+      <ng-template let-empleado pTemplate="selectedItem">
+        {{ getEmpleadoLabel(empleado) }}
+      </ng-template>
+    </p-select>
+
+    <p-datepicker
+      [(ngModel)]="filtroFechaDesde"
+      [maxDate]="filtroFechaHasta"
+      (onSelect)="onFechaDesdeChange()"
+      (onClear)="onFechaDesdeChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      placeholder="Fecha desde"
+      dateFormat="dd/mm/yy"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha inicio del rango de aplicación"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-datepicker
+      [(ngModel)]="filtroFechaHasta"
+      [minDate]="filtroFechaDesde"
+      (onSelect)="onFechaHastaChange()"
+      (onClear)="onFechaHastaChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      placeholder="Fecha hasta"
+      dateFormat="dd/mm/yy"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha fin del rango de aplicación"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <!-- Spacer -->
+    <div class="flex-1"></div>
+
+    <div class="flex gap-2">
+      @if (habilitaCrearVacuna) {
+        <p-button
+          styleClass="h-full"
+          [style]="{ 'aspect-ratio': '1' }"
+          (onClick)="crearVacunaBoton()"
+          icon="pi pi-plus"
+          pTooltip="Crear nueva vacuna"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        />
+      }
+
+      <p-button
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+        icon="pi pi-pencil"
+        severity="warn"
+        [disabled]="!habilitaEditarVacuna"
+        (onClick)="editarVacunaBoton()"
+        pTooltip="Editar vacuna seleccionada"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+
+      <p-button
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+        icon="pi pi-trash"
+        severity="danger"
+        [disabled]="!habilitaEliminarVacuna"
+        (onClick)="eliminarVacunaBoton()"
+        pTooltip="Eliminar vacuna seleccionada"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+    </div>
+  </div>
+
+  <div #tableContainer class="table-container">
+    <p-table
+      #dt
+      [value]="listaVacunas"
+      selectionMode="single"
+      [(selection)]="vacunaSeleccionada"
+      (onRowSelect)="onRowSelect()"
+      (onRowUnselect)="onRowUnselect()"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      styleClass="p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Fecha Aplicación</th>
+          <th scope="col">Mascota</th>
+          <th scope="col">Dueño</th>
+          <th scope="col">Tipo de Vacuna</th>
+          <th scope="col">Veterinario</th>
+          <th scope="col">Lote</th>
+          <th scope="col">Próxima Aplicación</th>
+          @if (puedeVerActivo) {
+            <th scope="col">Activo</th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-vacuna>
+        <tr [pSelectableRow]="vacuna">
+          <td>
+            {{ (vacuna.fechaAplicacion | date: "dd/MM/yyyy HH:mm") || "-" }}
+          </td>
+          <td>{{ getMascotaNombre(vacuna) }}</td>
+          <td>{{ getDuenioNombre(vacuna) }}</td>
+          <td>{{ getVacunaTipoNombre(vacuna) }}</td>
+          <td>{{ getVeterinarioNombre(vacuna) }}</td>
+          <td>{{ vacuna.lote || "-" }}</td>
+          <td>
+            {{ (vacuna.fechaProximaAplicacion | date: "dd/MM/yyyy") || "-" }}
+          </td>
+          @if (puedeVerActivo) {
+            <td>
+              <span
+                [class]="
+                  vacuna.activo
+                    ? 'pi pi-check-circle text-green-500'
+                    : 'pi pi-times-circle text-red-500'
+                "
+              ></span>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center">
+            No se encontraron registros de vacunas.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

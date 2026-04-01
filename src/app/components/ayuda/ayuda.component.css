@@ -1,0 +1,21 @@
+.ayuda-seccion {
+  max-width: 860px;
+}
+
+.ayuda-bloque {
+  scroll-margin-top: 1rem;
+}
+
+.ayuda-imagen-wrapper {
+  display: inline-block;
+  max-width: 100%;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  overflow: hidden;
+}
+
+.ayuda-imagen {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

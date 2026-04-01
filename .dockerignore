@@ -1,0 +1,79 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be reinstalled in container)
+node_modules
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Build outputs (will be regenerated)
+dist
+.angular
+.angular/cache
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+*.spec.ts
+karma.conf.js
+src/**/*.spec.ts
+e2e
+
+# Documentation
+README.md
+docs
+*.md
+CLAUDE.md
+
+# Environment files (configuration via env vars)
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.bak
+*.swp
+
+# Docker files (avoid recursion)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# NOTA: package-lock.json NO debe estar aquí, se necesita para npm ci
+# Solo excluir yarn.lock si se usa npm
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Other
+.editorconfig
+.prettierrc
+.prettierignore
+.eslintrc.json

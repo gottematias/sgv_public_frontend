@@ -1,0 +1,386 @@
+# OpenAPI Vacuna Module
+# This file contains all Vacuna-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Vacuna Module
+  version: 1.0.0
+  description: Módulo de gestión de registros de vacunación
+
+paths:
+  /vacuna/create:
+    post:
+      tags:
+        - Vacuna
+      summary: Crear registro de vacunación
+      description: |
+        Crea un nuevo registro de vacunación para una mascota.
+
+        **Roles requeridos:** VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: vacunaCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVacunaDto"
+      responses:
+        "201":
+          description: Vacuna registrada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/vacuna/update/{id}":
+    put:
+      tags:
+        - Vacuna
+      summary: Actualizar registro de vacunación
+      description: |
+        Actualiza los datos de un registro de vacunación existente.
+
+        **Roles requeridos:** VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: vacunaUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVacunaDto"
+      responses:
+        "200":
+          description: Vacuna actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/vacuna/get/{id}":
+    get:
+      tags:
+        - Vacuna
+      summary: Obtener vacuna por ID
+      operationId: vacunaGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Vacuna encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVacuna"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /vacuna/list:
+    get:
+      tags:
+        - Vacuna
+      summary: Listar vacunas
+      operationId: vacunaList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idMascota
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por mascota
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por empleado
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango de fechaAplicacion
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango de fechaAplicacion
+        - name: fechaDesdeProximaAplicacion
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango de fechaProximaAplicacion
+        - name: fechaHastaProximaAplicacion
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango de fechaProximaAplicacion
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de vacunas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVacunaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/vacuna/delete/{id}":
+    delete:
+      tags:
+        - Vacuna
+      summary: Eliminar vacuna (soft delete)
+      description: |
+        Elimina lógicamente un registro de vacunación (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: vacunaDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Vacuna eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /vacuna/tipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de vacuna
+      operationId: vacunaTipoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de vacuna
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVacunaTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      $ref: "../openapi-shared.yaml#/components/securitySchemes/BearerAuth"
+
+  schemas:
+    VacunaTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOVacunaTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/VacunaTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Vacuna:
+      type: object
+      required:
+        - id
+        - fechaAplicacion
+        - idEmpleado
+        - idMascota
+        - idVacunaTipo
+        - activo
+      properties:
+        id:
+          type: integer
+        fechaAplicacion:
+          type: string
+          format: date-time
+        fechaProximaAplicacion:
+          type: string
+          format: date-time
+          nullable: true
+        lote:
+          type: string
+          maxLength: 100
+          nullable: true
+        numeroSerie:
+          type: string
+          maxLength: 100
+          nullable: true
+        observaciones:
+          type: string
+          nullable: true
+        idEmpleado:
+          type: integer
+        idMascota:
+          type: integer
+        idVacunaTipo:
+          type: integer
+        activo:
+          type: boolean
+        empleado:
+          $ref: "#/components/schemas/Empleado"
+        mascota:
+          $ref: "#/components/schemas/Mascota"
+        vacunaTipo:
+          $ref: "#/components/schemas/VacunaTipo"
+    CreateVacunaDto:
+      type: object
+      required:
+        - fechaAplicacion
+        - idEmpleado
+        - idMascota
+        - idVacunaTipo
+      properties:
+        fechaAplicacion:
+          type: string
+          format: date-time
+          example: "2026-01-15T10:00:00Z"
+        fechaProximaAplicacion:
+          type: string
+          format: date-time
+          example: "2027-01-15T10:00:00Z"
+        lote:
+          type: string
+          maxLength: 100
+          example: LOTE-2026-001
+        numeroSerie:
+          type: string
+          maxLength: 100
+          example: SERIE-12345
+        observaciones:
+          type: string
+          example: Vacuna aplicada sin complicaciones
+        idEmpleado:
+          type: integer
+          example: 1
+        idMascota:
+          type: integer
+          example: 1
+        idVacunaTipo:
+          type: integer
+          example: 1
+    UpdateVacunaDto:
+      type: object
+      properties:
+        fechaAplicacion:
+          type: string
+          format: date-time
+        fechaProximaAplicacion:
+          type: string
+          format: date-time
+        lote:
+          type: string
+          maxLength: 100
+        numeroSerie:
+          type: string
+          maxLength: 100
+        observaciones:
+          type: string
+        idEmpleado:
+          type: integer
+        idMascota:
+          type: integer
+        idVacunaTipo:
+          type: integer
+        activo:
+          type: boolean
+          description: Estado activo del registro
+          example: true
+    ResponseDTOVacuna:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Vacuna"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOVacunaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vacuna"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    # Cross-module references
+    Empleado:
+      description: "Empleado entity - See openapi.yaml#/components/schemas/Empleado for full definition"
+      type: object
+      properties:
+        id:
+          type: integer
+    Mascota:
+      description: "Mascota entity - See openapi.yaml#/components/schemas/Mascota for full definition"
+      type: object
+      properties:
+        id:
+          type: integer

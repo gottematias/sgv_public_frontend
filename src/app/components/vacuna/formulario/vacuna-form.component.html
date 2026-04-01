@@ -1,0 +1,251 @@
+<form [formGroup]="formGroupVacuna" (ngSubmit)="guardar()">
+  <div class="grid">
+    <!-- Row 1: Mascota and Veterinario -->
+    <div class="col-12 md:col-6">
+      <label for="idMascota" class="block mb-2">
+        Mascota <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="idMascota"
+        [options]="mascotas"
+        formControlName="idMascota"
+        placeholder="Seleccione mascota"
+        [filter]="true"
+        filterBy="nombre,persona.apellidos,persona.nombres"
+        optionValue="id"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupVacuna.get('idMascota')?.invalid && formEnviado
+        "
+      >
+        <ng-template let-mascota pTemplate="item">
+          <div>
+            {{ mascota.nombre }}
+            @if (mascota.persona) {
+              ({{ mascota.persona.apellidos }}, {{ mascota.persona.nombres }})
+            }
+          </div>
+        </ng-template>
+        <ng-template let-mascota pTemplate="selectedItem">
+          {{ mascota.nombre }}
+          @if (mascota.persona) {
+            ({{ mascota.persona.apellidos }}, {{ mascota.persona.nombres }})
+          }
+        </ng-template>
+      </p-select>
+      @if (formGroupVacuna.get("idMascota")?.invalid && formEnviado) {
+        <small class="text-red-500">La mascota es requerida</small>
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="idEmpleado" class="block mb-2">
+        Veterinario <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="idEmpleado"
+        [options]="veterinarios"
+        formControlName="idEmpleado"
+        placeholder="Seleccione veterinario"
+        [filter]="true"
+        filterBy="usuario.persona.apellidos,usuario.persona.nombres,matricula"
+        optionValue="id"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupVacuna.get('idEmpleado')?.invalid && formEnviado
+        "
+      >
+        <ng-template let-vet pTemplate="item">
+          {{ getVeterinarioLabel(vet) }}
+        </ng-template>
+        <ng-template let-vet pTemplate="selectedItem">
+          {{ getVeterinarioLabel(vet) }}
+        </ng-template>
+      </p-select>
+      @if (formGroupVacuna.get("idEmpleado")?.invalid && formEnviado) {
+        <small class="text-red-500">El veterinario es requerido</small>
+      }
+    </div>
+
+    <!-- Row 2: Tipo de Vacuna -->
+    <div class="col-12">
+      <label for="idVacunaTipo" class="block mb-2">
+        Tipo de Vacuna <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="idVacunaTipo"
+        [options]="vacunaTipos"
+        formControlName="idVacunaTipo"
+        placeholder="Seleccione tipo de vacuna"
+        optionLabel="nombre"
+        optionValue="id"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupVacuna.get('idVacunaTipo')?.invalid && formEnviado
+        "
+      >
+        <ng-template let-tipo pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ tipo.nombre }}</div>
+            @if (tipo.descripcion) {
+              <div class="text-sm text-gray-600">
+                {{ tipo.descripcion }}
+              </div>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+      @if (formGroupVacuna.get("idVacunaTipo")?.invalid && formEnviado) {
+        <small class="text-red-500">El tipo de vacuna es requerido</small>
+      }
+    </div>
+
+    <!-- Row 3: Dates -->
+    <div class="col-12 md:col-6">
+      <label for="fechaAplicacion" class="block mb-2">
+        Fecha de Aplicación <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        inputId="fechaAplicacion"
+        formControlName="fechaAplicacion"
+        [showIcon]="true"
+        iconDisplay="button"
+        [showOnFocus]="false"
+        [maxDate]="today"
+        dateFormat="dd/mm/yy"
+        placeholder="DD/MM/YYYY"
+        appendTo="body"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupVacuna.get('fechaAplicacion')?.invalid && formEnviado
+        "
+      ></p-datepicker>
+      @if (formGroupVacuna.get("fechaAplicacion")?.invalid && formEnviado) {
+        <small class="text-red-500">La fecha de aplicación es requerida</small>
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="fechaProximaAplicacion" class="block mb-2">
+        Próxima Aplicación
+      </label>
+      <p-datepicker
+        inputId="fechaProximaAplicacion"
+        formControlName="fechaProximaAplicacion"
+        [showIcon]="true"
+        iconDisplay="button"
+        [showOnFocus]="false"
+        dateFormat="dd/mm/yy"
+        placeholder="DD/MM/YYYY"
+        appendTo="body"
+        class="w-full"
+        [style]="{ width: '100%' }"
+      ></p-datepicker>
+      <div class="flex gap-3 mt-2 flex-wrap text-sm">
+        <button
+          type="button"
+          class="p-0 border-none bg-transparent cursor-pointer text-primary hover:underline"
+          (click)="agregarMesesProximaAplicacion(1)"
+        >
+          +1 mes
+        </button>
+        <button
+          type="button"
+          class="p-0 border-none bg-transparent cursor-pointer text-primary hover:underline"
+          (click)="agregarMesesProximaAplicacion(2)"
+        >
+          +2 meses
+        </button>
+        <button
+          type="button"
+          class="p-0 border-none bg-transparent cursor-pointer text-primary hover:underline"
+          (click)="agregarMesesProximaAplicacion(3)"
+        >
+          +3 meses
+        </button>
+        <button
+          type="button"
+          class="p-0 border-none bg-transparent cursor-pointer text-primary hover:underline"
+          (click)="agregarMesesProximaAplicacion(12)"
+        >
+          +1 año
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 4: Lote and Serie -->
+    <div class="col-12 md:col-6">
+      <label for="lote" class="block mb-2">Lote</label>
+      <input
+        id="lote"
+        type="text"
+        pInputText
+        formControlName="lote"
+        class="w-full"
+        placeholder="Número de lote"
+        maxlength="100"
+      />
+      @if (formGroupVacuna.get("lote")?.hasError("maxlength")) {
+        <small class="text-red-500">Máximo 100 caracteres permitidos</small>
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="numeroSerie" class="block mb-2">Número de Serie</label>
+      <input
+        id="numeroSerie"
+        type="text"
+        pInputText
+        formControlName="numeroSerie"
+        class="w-full"
+        placeholder="Número de serie"
+        maxlength="100"
+      />
+      @if (formGroupVacuna.get("numeroSerie")?.hasError("maxlength")) {
+        <small class="text-red-500">Máximo 100 caracteres permitidos</small>
+      }
+    </div>
+
+    <!-- Row 5: Observaciones -->
+    <div class="col-12 md:col-6">
+      <label for="observaciones" class="block mb-2">Observaciones</label>
+      <textarea
+        id="observaciones"
+        pTextarea
+        formControlName="observaciones"
+        class="w-full"
+        rows="3"
+        placeholder="Observaciones adicionales"
+      ></textarea>
+    </div>
+
+    <!-- Row 6: Estado (Activo) -->
+    @if (modoEdicion && puedeToggleActivo) {
+      <div class="col-12 md:col-6">
+        <span class="block mb-2">Estado</span>
+        <div class="flex align-items-center h-3rem">
+          <p-checkbox
+            inputId="activo"
+            formControlName="activo"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="activo" class="ml-2">Vacuna activa</label>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-3">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cancelar()"
+      type="button"
+    />
+    <p-button label="Guardar" type="submit" />
+  </div>
+</form>

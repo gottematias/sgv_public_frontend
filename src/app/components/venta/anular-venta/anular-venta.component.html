@@ -1,0 +1,81 @@
+<div class="p-4">
+  <form [formGroup]="formGroupAnular" (ngSubmit)="anular()">
+    <div class="grid">
+      <div class="col-12">
+        <label for="motivo" class="block mb-2">
+          Motivo de Anulación <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="motivo"
+          formControlName="motivo"
+          [options]="motivos"
+          optionLabel="nombre"
+          placeholder="Seleccione motivo"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          [class.ng-invalid]="
+            formGroupAnular.get('motivo')?.invalid &&
+            formGroupAnular.get('motivo')?.touched
+          "
+          pTooltip="Seleccione el motivo de anulación"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-motivo pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ motivo.nombre }}</div>
+              @if (motivo.descripcion) {
+                <div class="text-sm text-gray-600">
+                  {{ motivo.descripcion }}
+                </div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+        @if (
+          formGroupAnular.get("motivo")?.invalid &&
+          formGroupAnular.get("motivo")?.touched
+        ) {
+          <small class="text-red-500">El motivo es requerido</small>
+        }
+      </div>
+
+      <div class="col-12">
+        <label for="observaciones" class="block mb-2">Observaciones</label>
+        <textarea
+          pTextarea
+          id="observaciones"
+          formControlName="observaciones"
+          rows="4"
+          class="w-full"
+          placeholder="Ingrese observaciones adicionales (opcional)"
+          maxlength="500"
+          pTooltip="Ingrese observaciones adicionales sobre la anulación"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        ></textarea>
+        <small class="text-500 block mt-1">
+          {{ formGroupAnular.value.observaciones?.length || 0 }}/500 caracteres
+        </small>
+      </div>
+    </div>
+
+    <div class="flex justify-content-between gap-2 mt-4">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="cerrar()"
+        type="button"
+      />
+      <p-button
+        label="Anular Venta"
+        severity="danger"
+        type="submit"
+        [disabled]="formGroupAnular.invalid"
+      />
+    </div>
+  </form>
+</div>

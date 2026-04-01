@@ -1,0 +1,394 @@
+@if (cargando) {
+  <div class="flex justify-content-center align-items-center p-5">
+    <i class="pi pi-spin pi-spinner text-4xl"></i>
+  </div>
+} @else if (venta) {
+  <div class="grid">
+    <!-- Left Column: Venta Data & Items -->
+    <div class="col-12 lg:col-8">
+      <div class="card mb-3">
+        <h4>Información de la Venta</h4>
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <div class="mb-3">
+              <div class="block text-sm text-gray-600 mb-1">Fecha</div>
+              <div class="font-semibold">
+                {{ venta.fecha | date: "dd/MM/yyyy HH:mm" }}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6">
+            <div class="mb-3">
+              <div class="block text-sm text-gray-600 mb-1">Estado</div>
+              <div>
+                @if (venta.estado) {
+                  @if (
+                    venta.estado.nombre.toLowerCase() === "completada" ||
+                    venta.estado.nombre.toLowerCase() === "pendiente"
+                  ) {
+                    <p-tag [value]="venta.estado.nombre" severity="success" />
+                  } @else if (
+                    venta.estado.nombre.toLowerCase() === "cancelada" ||
+                    venta.estado.nombre.toLowerCase() === "anulada"
+                  ) {
+                    <p-tag [value]="venta.estado.nombre" severity="danger" />
+                  } @else {
+                    <p-tag [value]="venta.estado.nombre" severity="warning" />
+                  }
+                } @else {
+                  <p-tag value="Desconocido" severity="secondary" />
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6">
+            <div class="mb-3">
+              <div class="block text-sm text-gray-600 mb-1">Cliente</div>
+              <div class="font-semibold">
+                @if (venta.cliente) {
+                  {{ venta.cliente.apellidos }}, {{ venta.cliente.nombres }}
+                } @else {
+                  <span class="text-gray-400">Sin cliente</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6">
+            <div class="mb-3">
+              <div class="block text-sm text-gray-600 mb-1">Vendedor</div>
+              <div class="font-semibold">
+                @if (venta.empleado.usuario?.persona; as persona) {
+                  {{ persona.apellidos }}, {{ persona.nombres }}
+                } @else {
+                  @if (venta.empleado.usuario; as usuario) {
+                    {{ usuario.nombre }}
+                  } @else {
+                    <span class="text-gray-400">-</span>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <h4>Items</h4>
+        <p-table [value]="venta.detalles" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col">Descripción</th>
+              <th scope="col">Cantidad</th>
+              <th scope="col" class="white-space-nowrap">Precio Unit.</th>
+              <th scope="col">Subtotal</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-detalle>
+            <tr>
+              <td>
+                @if (detalle.producto) {
+                  <p-tag value="Producto" severity="info" />
+                } @else if (detalle.servicio) {
+                  <p-tag value="Servicio" severity="success" />
+                } @else {
+                  <p-tag value="Desconocido" severity="secondary" />
+                }
+              </td>
+              <td>
+                @if (detalle.producto) {
+                  <div>
+                    <div class="font-semibold">
+                      {{ detalle.producto.nombre }}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      Código: {{ detalle.producto.codigoInterno }}
+                    </div>
+                  </div>
+                } @else if (detalle.servicio) {
+                  <div>
+                    <div class="font-semibold">
+                      {{ detalle.servicio.nombre }}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      Código: {{ detalle.servicio.codigoInterno }}
+                    </div>
+                  </div>
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </td>
+              <td>{{ detalle.cantidad }}</td>
+              <td class="font-semibold">
+                {{
+                  detalle.precioUnitario
+                    | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </td>
+              <td class="font-bold">
+                {{
+                  detalle.subtotal | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center">No hay items registrados</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="card mb-3">
+        <h4>Pagos</h4>
+        <p-table [value]="venta.pagos" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Método</th>
+              <th scope="col">Monto</th>
+              <th scope="col">Monto Bonificado</th>
+              <th scope="col">Referencia</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-pago>
+            <tr>
+              <td>{{ pago.fecha | date: "dd/MM/yyyy HH:mm" }}</td>
+              <td>
+                @if (pago.metodoPago) {
+                  {{ pago.metodoPago.nombre }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </td>
+              <td class="font-bold">
+                {{ pago.monto | currency: "ARS" : "symbol-narrow" : "1.2-2" }}
+              </td>
+              <td>
+                @if (pago.montoBonificado) {
+                  {{
+                    pago.montoBonificado
+                      | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                  }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </td>
+              <td>
+                @if (pago.referencia) {
+                  {{ pago.referencia }}
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </td>
+              <td>
+                @if (pago.estado) {
+                  <p-tag [value]="pago.estado.nombre" severity="info" />
+                } @else {
+                  <span class="text-gray-400">-</span>
+                }
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="cambiarEstadoPago(pago)"
+                  pTooltip="Cambiar estado del pago"
+                  tooltipPosition="top"
+                  [tooltipOptions]="{ life: 3000 }"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center">No hay pagos registrados</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Action Buttons: Separación entre acciones y navegación -->
+      <div
+        class="flex justify-content-between align-items-center gap-3 mt-4 pt-3 border-top-1 surface-border"
+      >
+        <!-- Grupo Izquierdo: Acciones sobre la venta -->
+        <div class="flex gap-2">
+          @if (puedeAgregarPago()) {
+            <p-button
+              label="Agregar Pago"
+              icon="pi pi-plus"
+              severity="success"
+              [outlined]="true"
+              (onClick)="agregarPago()"
+              pTooltip="Agregar un nuevo pago a esta venta"
+              tooltipPosition="bottom"
+              [tooltipOptions]="{ life: 3000 }"
+            />
+          }
+          @if (
+            venta &&
+            venta.estado.nombre.toLowerCase() !== "cancelada" &&
+            venta.estado.nombre.toLowerCase() !== "anulada" &&
+            authorizationService.canAnularVenta()
+          ) {
+            <p-button
+              label="Anular Venta"
+              icon="pi pi-ban"
+              severity="danger"
+              (onClick)="anularVenta()"
+              pTooltip="Anular esta venta con motivo y observaciones"
+              tooltipPosition="bottom"
+              [tooltipOptions]="{ life: 3000 }"
+            />
+          }
+        </div>
+
+        <!-- Grupo Derecho: Navegación -->
+        <div>
+          <p-button
+            label="Cerrar"
+            icon="pi pi-times"
+            severity="secondary"
+            (onClick)="cerrar()"
+            pTooltip="Cerrar ventana de detalle"
+            tooltipPosition="bottom"
+            [tooltipOptions]="{ life: 3000 }"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Summary -->
+    <div class="col-12 lg:col-4">
+      <div class="card sticky" style="top: 1rem">
+        <h4>Resumen</h4>
+
+        <div class="mb-3">
+          <div class="flex justify-content-between mb-2">
+            <span>Items:</span>
+            <span class="font-bold">{{ getTotalItems() }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span>Total Venta:</span>
+            <span class="font-bold text-xl text-primary">
+              {{
+                venta.totalFinal | currency: "ARS" : "symbol-narrow" : "1.2-2"
+              }}
+            </span>
+          </div>
+
+          @if (venta.montoAjusteRedondeo) {
+            <div class="flex justify-content-between mb-2 text-sm">
+              <span class="text-gray-600">Ajuste redondeo:</span>
+              <span>
+                {{
+                  venta.montoAjusteRedondeo
+                    | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </span>
+            </div>
+          }
+        </div>
+
+        @if (hasCalculationMismatch()) {
+          <div class="mt-3 p-2 bg-yellow-50 border-round">
+            <div class="flex align-items-center gap-2 text-yellow-700">
+              <i class="pi pi-info-circle"></i>
+              <span class="font-semibold">Verificación de Totales</span>
+            </div>
+            <div class="text-sm text-yellow-600 mt-2">
+              <div class="mb-1">
+                <strong>Suma de items:</strong>
+                {{
+                  getCalculatedSubtotal()
+                    | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </div>
+              <div class="mb-1">
+                <strong>Total registrado:</strong>
+                {{
+                  venta.totalFinal | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </div>
+              <div class="text-xs mt-2 text-yellow-500">
+                <i class="pi pi-lightbulb text-xs"></i>
+                Existe una diferencia de
+                {{
+                  getDiferencia() | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}. Puede deberse a ajustes de redondeo.
+              </div>
+            </div>
+          </div>
+        }
+
+        <hr />
+
+        <div class="mt-3">
+          <div class="flex justify-content-between mb-2">
+            <span>Pagos registrados:</span>
+            <span class="font-bold">{{ getTotalPagos() }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span>Total Pagado (Aprobado):</span>
+            <span class="font-bold text-xl text-green-600">
+              {{
+                getTotalPagado() | currency: "ARS" : "symbol-narrow" : "1.2-2"
+              }}
+            </span>
+          </div>
+
+          @if (getTotalPagado() === venta.totalFinal) {
+            <div class="mt-3 p-2 bg-green-50 border-round">
+              <div class="flex align-items-center gap-2 text-green-600">
+                <i class="pi pi-check-circle"></i>
+                <span class="font-semibold">Pago completo</span>
+              </div>
+            </div>
+          } @else {
+            <div class="mt-3 p-2 bg-yellow-50 border-round">
+              <div class="flex align-items-center gap-2 text-yellow-600">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span class="font-semibold">Pago pendiente</span>
+              </div>
+              <div class="text-sm text-yellow-500 mt-1">
+                Diferencia:
+                {{
+                  venta.totalFinal - getTotalPagado()
+                    | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                }}
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (
+          venta.estado &&
+          (venta.estado.nombre.toLowerCase() === "cancelada" ||
+            venta.estado.nombre.toLowerCase() === "anulada")
+        ) {
+          <hr />
+          <div class="mt-3 p-2 bg-red-50 border-round">
+            <div class="flex align-items-center gap-2 text-red-600">
+              <i class="pi pi-ban"></i>
+              <span class="font-semibold">Venta Anulada</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="flex justify-content-center align-items-center p-5">
+    <p class="text-gray-500">No se pudo cargar la venta.</p>
+  </div>
+}

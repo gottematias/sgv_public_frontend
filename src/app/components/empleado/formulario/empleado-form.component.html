@@ -1,0 +1,353 @@
+<form [formGroup]="formGroupEmpleado" (ngSubmit)="guardar()">
+  <div class="grid">
+    <!-- Fila 1: Usuario y Datos de la Persona -->
+    <div class="col-12 md:col-6">
+      <label for="usuario" class="block mb-2">
+        Usuario <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="usuario"
+        formControlName="usuario"
+        [options]="usuarios"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        placeholder="Seleccione un usuario"
+        [filter]="true"
+        filterBy="nombre"
+        filterPlaceholder="Buscar usuario..."
+        [showClear]="true"
+        [class.ng-invalid]="
+          formGroupEmpleado.get('usuario')?.invalid && formEnviado
+        "
+        pTooltip="Seleccione el usuario a asignar como empleado"
+        tooltipPosition="top"
+        [tooltipOptions]="{ life: 4000 }"
+      >
+        <ng-template let-usuario pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ usuario.nombre }}</div>
+            @if (usuario.persona) {
+              <div class="text-sm text-gray-600">
+                {{ usuario.persona.nombres }} {{ usuario.persona.apellidos }}
+              </div>
+            }
+          </div>
+        </ng-template>
+        <ng-template let-usuario pTemplate="selectedItem">
+          <div *ngIf="usuario">
+            {{ usuario.nombre }}
+            @if (usuario.persona) {
+              <span class="text-sm text-gray-600">
+                ({{ usuario.persona.nombres }} {{ usuario.persona.apellidos }})
+              </span>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+      @if (formGroupEmpleado.get("usuario")?.invalid && formEnviado) {
+        <small class="text-red-500">El usuario es requerido</small>
+      }
+      <small class="text-500 block mt-1">
+        El usuario debe existir previamente.
+      </small>
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="personaAsociada" class="block mb-2">Persona Asociada</label>
+      <input
+        id="personaAsociada"
+        pInputText
+        [ngModel]="getPersonaAsociadaTexto()"
+        [ngModelOptions]="{ standalone: true }"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [disabled]="true"
+        placeholder="Seleccione un usuario para ver los datos de la persona"
+      />
+    </div>
+
+    <!-- Fila 2: Fecha Ingreso, Fecha Egreso y Estado -->
+    <div class="col-12 md:col-4">
+      <label for="fechaIngreso" class="block mb-2">
+        Fecha de Ingreso <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        id="fechaIngreso"
+        formControlName="fechaIngreso"
+        [style]="{ width: '100%' }"
+        dateFormat="dd/mm/yy"
+        placeholder="Seleccione fecha de ingreso"
+        [showIcon]="true"
+        appendTo="body"
+        [class.ng-invalid]="
+          formGroupEmpleado.get('fechaIngreso')?.invalid && formEnviado
+        "
+        pTooltip="Fecha en que el empleado ingresó a la empresa"
+        tooltipPosition="top"
+        [tooltipOptions]="{ life: 4000 }"
+      ></p-datepicker>
+      @if (formGroupEmpleado.get("fechaIngreso")?.invalid && formEnviado) {
+        <small class="text-red-500">La fecha de ingreso es requerida</small>
+      }
+    </div>
+
+    <div class="col-12 md:col-4">
+      <label for="fechaEgreso" class="block mb-2">Fecha de Egreso</label>
+      <p-datepicker
+        id="fechaEgreso"
+        formControlName="fechaEgreso"
+        [style]="{ width: '100%' }"
+        dateFormat="dd/mm/yy"
+        placeholder="Seleccione fecha de egreso (opcional)"
+        [showIcon]="true"
+        appendTo="body"
+        pTooltip="Fecha en que el empleado dejó la empresa (opcional)"
+        tooltipPosition="top"
+        [tooltipOptions]="{ life: 4000 }"
+      ></p-datepicker>
+      @if (!modoEdicion) {
+        <small class="text-500 block mt-1"
+          >Disponible solo en modo edición</small
+        >
+      }
+    </div>
+
+    @if (modoEdicion && puedeToggleActivo) {
+      <div class="col-12 md:col-4">
+        <span class="block mb-2">Estado</span>
+        <div class="flex align-items-center h-3rem">
+          <p-checkbox
+            inputId="activo"
+            formControlName="activo"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="activo" class="ml-2">Empleado activo</label>
+        </div>
+      </div>
+    }
+
+    <!-- Especialidades -->
+    <div class="col-12">
+      <p-divider></p-divider>
+      <label for="especialidades" class="block mb-2">Especialidades</label>
+      <p-multiSelect
+        id="especialidades"
+        formControlName="especialidades"
+        [options]="especialidades"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccione especialidades (opcional)"
+        [filter]="true"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        display="chip"
+        pTooltip="Seleccione especialidades del empleado"
+        tooltipPosition="top"
+        [tooltipOptions]="{ life: 4000 }"
+      >
+        <ng-template let-especialidad pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ especialidad.nombre }}</div>
+            @if (especialidad.descripcion) {
+              <div class="text-sm text-gray-600">
+                {{ especialidad.descripcion }}
+              </div>
+            }
+          </div>
+        </ng-template>
+      </p-multiSelect>
+      <small class="text-500 block mt-1">
+        Las especialidades son opcionales.
+      </small>
+    </div>
+
+    <!-- Puestos Section -->
+    <div class="col-12">
+      <p-divider></p-divider>
+      <div class="flex justify-content-between align-items-center mb-3">
+        <span class="font-semibold">Puestos</span>
+        <p-button
+          icon="pi pi-plus"
+          label="Agregar Puesto"
+          severity="secondary"
+          [text]="true"
+          (onClick)="agregarPuesto()"
+          type="button"
+        ></p-button>
+      </div>
+
+      <div
+        *ngFor="let puestoAsignado of puestosAsignados; let i = index"
+        class="grid align-items-end mb-2 p-2 surface-100 border-round"
+      >
+        <div class="col-12 md:col-5">
+          <label class="block mb-2" [for]="'puesto_' + i">Puesto</label>
+          <p-select
+            [id]="'puesto_' + i"
+            [(ngModel)]="puestoAsignado.puesto"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="puestos"
+            optionLabel="nombre"
+            placeholder="Seleccione puesto"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+            [filter]="true"
+          >
+            <ng-template let-puesto pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ puesto.nombre }}</div>
+                @if (puesto.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ puesto.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+        <div class="col-12 md:col-3">
+          <label class="block mb-2" [for]="'fechaInicio_' + i"
+            >Fecha Inicio</label
+          >
+          <p-datepicker
+            [id]="'fechaInicio_' + i"
+            [(ngModel)]="puestoAsignado.fechaInicio"
+            [ngModelOptions]="{ standalone: true }"
+            [style]="{ width: '100%' }"
+            dateFormat="dd/mm/yy"
+            placeholder="Fecha inicio"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+          ></p-datepicker>
+        </div>
+        <div class="col-12 md:col-3">
+          <label class="block mb-2" [for]="'fechaFin_' + i">Fecha Fin</label>
+          <p-datepicker
+            [id]="'fechaFin_' + i"
+            [(ngModel)]="puestoAsignado.fechaFin"
+            [ngModelOptions]="{ standalone: true }"
+            [style]="{ width: '100%' }"
+            dateFormat="dd/mm/yy"
+            placeholder="Fecha fin (opcional)"
+            [showIcon]="true"
+            appendTo="body"
+            class="w-full"
+          ></p-datepicker>
+        </div>
+        <div class="col-12 md:col-1 flex justify-content-end">
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            (onClick)="eliminarPuesto(i)"
+            type="button"
+            pTooltip="Eliminar puesto"
+            [tooltipOptions]="{ life: 3000 }"
+            styleClass="h-full"
+            [style]="{ 'aspect-ratio': '1' }"
+          ></p-button>
+        </div>
+      </div>
+      <small class="text-500 block mt-1" *ngIf="puestosAsignados.length === 0">
+        No hay puestos asignados. Haga clic en "Agregar Puesto" para agregar
+        uno.
+      </small>
+      <small class="text-500 block mt-1" *ngIf="puestosAsignados.length > 0">
+        Los puestos son opcionales.
+      </small>
+    </div>
+
+    <!-- Atributos Section -->
+    <div class="col-12">
+      <p-divider></p-divider>
+      <div class="flex justify-content-between align-items-center mb-3">
+        <span class="font-semibold">Datos de Empleado</span>
+        <p-button
+          icon="pi pi-plus"
+          label="Agregar Atributo"
+          severity="secondary"
+          [text]="true"
+          (onClick)="agregarAtributo()"
+          type="button"
+        ></p-button>
+      </div>
+
+      <div
+        *ngFor="let atributo of atributosAsignados; let i = index"
+        class="grid align-items-end mb-2 p-2 surface-100 border-round"
+      >
+        <div class="col-12 md:col-4">
+          <label class="block mb-2" [for]="'tipoAtributo_' + i"
+            >Tipo de Atributo</label
+          >
+          <p-select
+            [id]="'tipoAtributo_' + i"
+            [(ngModel)]="atributo.atributoTipo"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="atributoTipos"
+            optionLabel="nombre"
+            placeholder="Seleccione tipo"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            appendTo="body"
+          >
+            <ng-template let-tipo pTemplate="item">
+              <div>
+                <div class="font-semibold">{{ tipo.nombre }}</div>
+                @if (tipo.descripcion) {
+                  <div class="text-sm text-gray-600">
+                    {{ tipo.descripcion }}
+                  </div>
+                }
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+        <div class="col-12 md:col-7">
+          <label class="block mb-2" [for]="'valorAtributo_' + i">Valor</label>
+          <input
+            [id]="'valorAtributo_' + i"
+            type="text"
+            pInputText
+            [(ngModel)]="atributo.valor"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-full"
+            placeholder="Ingrese el valor"
+          />
+        </div>
+        <div class="col-12 md:col-1 flex justify-content-end">
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            (onClick)="eliminarAtributo(i)"
+            type="button"
+            pTooltip="Eliminar atributo"
+            [tooltipOptions]="{ life: 3000 }"
+            styleClass="h-full"
+            [style]="{ 'aspect-ratio': '1' }"
+          ></p-button>
+        </div>
+      </div>
+      <small
+        class="text-500 block mt-1"
+        *ngIf="atributosAsignados.length === 0"
+      >
+        No hay atributos adicionales. Haga clic en "Agregar Atributo" para
+        agregar uno.
+      </small>
+    </div>
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-3">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button label="Guardar" type="submit" />
+  </div>
+</form>

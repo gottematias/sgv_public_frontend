@@ -1,0 +1,46 @@
+<div
+  *ngIf="cargandoDatos"
+  class="flex justify-content-center align-items-center p-5"
+>
+  <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+</div>
+
+<div
+  *ngIf="!cargandoDatos"
+  class="overflow-y-auto p-4"
+  style="max-width: 1400px; margin: 0 auto"
+>
+  <app-accesos-rapidos
+    (turnoCreado)="onTurnoCreado()"
+    (ventaCreada)="onVentaCreada()"
+  ></app-accesos-rapidos>
+
+  <p-divider></p-divider>
+
+  <app-busqueda-rapida-recepcion></app-busqueda-rapida-recepcion>
+
+  <p-divider></p-divider>
+
+  <div class="grid">
+    <div class="col-12 lg:col-6">
+      <app-turnos-dia></app-turnos-dia>
+    </div>
+
+    <!-- Horizontal divider on mobile -->
+    <div class="col-12 lg:hidden my-1">
+      <p-divider></p-divider>
+    </div>
+
+    <!-- Vertical divider on desktop -->
+    <div
+      class="hidden lg:flex lg:col-fixed align-items-stretch px-1"
+      style="width: auto"
+    >
+      <p-divider layout="vertical"></p-divider>
+    </div>
+
+    <div class="col-12 lg:col">
+      <app-vacunas-proximas></app-vacunas-proximas>
+    </div>
+  </div>
+</div>

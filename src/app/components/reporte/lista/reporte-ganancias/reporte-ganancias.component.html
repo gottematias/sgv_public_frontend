@@ -1,0 +1,162 @@
+<div class="flex flex-column h-full gap-2">
+  <div class="flex p-2 gap-3 flex-wrap align-items-center">
+    <p-datepicker
+      [(ngModel)]="fechaDesde"
+      [maxDate]="fechaHasta"
+      (onSelect)="onFechaDesdeChange()"
+      (onClear)="onFechaDesdeChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Fecha desde"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha inicio del período"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-datepicker
+      [(ngModel)]="fechaHasta"
+      [minDate]="fechaDesde"
+      (onSelect)="onFechaHastaChange()"
+      (onClear)="onFechaHastaChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Fecha hasta"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha fin del período"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-select
+      [options]="agruparPorOpciones"
+      [(ngModel)]="agruparPor"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Agrupar por"
+      [style]="{ width: '160px' }"
+      pTooltip="Granularidad de agrupación del detalle"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-select>
+
+    <div class="flex-1"></div>
+
+    <div class="flex gap-2">
+      <p-button
+        label="Generar Reporte"
+        icon="pi pi-search"
+        (onClick)="generarReporte()"
+        pTooltip="Consultar análisis de ganancias"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+      <p-button
+        icon="pi pi-file-excel"
+        severity="success"
+        [disabled]="listaGananciasDetalle.length === 0"
+        (onClick)="exportar('xlsx')"
+        pTooltip="Exportar a Excel (XLSX)"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+      />
+      <p-button
+        icon="pi pi-download"
+        severity="success"
+        [disabled]="listaGananciasDetalle.length === 0"
+        (onClick)="exportar('csv')"
+        pTooltip="Exportar a CSV"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="flex justify-content-center p-4">
+      <p-progressspinner [style]="{ width: '50px', height: '50px' }" />
+    </div>
+  }
+
+  @if (gananciasResumen && !isLoading) {
+    <div class="grid px-2 pb-2">
+      <div class="col-12 md:col-4">
+        <div
+          class="surface-card border-round p-3 text-center border-1 surface-border"
+        >
+          <div class="text-color-secondary text-sm mb-1">Ingresos Brutos</div>
+          <div class="text-2xl font-bold text-primary">
+            ${{ gananciasResumen.ingresosBrutos | number: "1.2-2" }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div
+          class="surface-card border-round p-3 text-center border-1 surface-border"
+        >
+          <div class="text-color-secondary text-sm mb-1">Ganancia Neta</div>
+          <div class="text-2xl font-bold text-green-500">
+            ${{ gananciasResumen.gananciaNeta | number: "1.2-2" }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div
+          class="surface-card border-round p-3 text-center border-1 surface-border"
+        >
+          <div class="text-color-secondary text-sm mb-1">Total Ventas</div>
+          <div class="text-2xl font-bold">
+            {{ gananciasResumen.totalVentas }}
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div #tableContainer class="table-container">
+    <p-table
+      [value]="listaGananciasDetalle"
+      styleClass="p-datatable-striped"
+      [scrollable]="true"
+      [scrollHeight]="tableScrollHeight"
+      [tableStyle]="{ 'min-width': '40rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Período</th>
+          <th scope="col">Ingresos Brutos ($)</th>
+          <th scope="col">Ganancia Neta ($)</th>
+          <th scope="col">Cantidad de Ventas</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>{{ item.periodo }}</td>
+          <td>{{ item.ingresosBrutos | number: "1.2-2" }}</td>
+          <td>{{ item.gananciaNeta | number: "1.2-2" }}</td>
+          <td>{{ item.cantidadVentas }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center py-4">
+            @if (!hasQueried) {
+              <span class="text-color-secondary">
+                <i class="pi pi-info-circle mr-2"></i>
+                Aplique los filtros y presione "Generar Reporte"
+              </span>
+            } @else {
+              No se encontraron datos de ganancias para el período seleccionado.
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

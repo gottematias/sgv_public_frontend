@@ -1,0 +1,58 @@
+<div class="p-4">
+  <div class="surface-ground border-round p-3 mb-4">
+    <div class="flex justify-content-between align-items-center">
+      <span class="font-semibold">Estado Actual:</span>
+      <span class="text-lg font-bold">{{ estadoActualNombre }}</span>
+    </div>
+  </div>
+
+  <form [formGroup]="formGroupEstado">
+    <div class="field">
+      <label for="estadoPago" class="block mb-2 font-semibold">
+        Nuevo Estado <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="estadoPago"
+        formControlName="estadoPago"
+        [options]="estadosPago"
+        optionLabel="nombre"
+        placeholder="Seleccione nuevo estado"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        pTooltip="Seleccione el nuevo estado del pago"
+        tooltipPosition="top"
+        [showDelay]="500"
+        [tooltipOptions]="{ life: 4000 }"
+      >
+        <ng-template let-estado pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ estado.nombre }}</div>
+            @if (estado.descripcion) {
+              <div class="text-sm text-gray-600">
+                {{ estado.descripcion }}
+              </div>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+      @if (
+        formGroupEstado.get("estadoPago")?.hasError("required") &&
+        formGroupEstado.get("estadoPago")?.touched
+      ) {
+        <small class="text-red-500 block mt-1">
+          Debe seleccionar un estado.
+        </small>
+      }
+    </div>
+  </form>
+
+  <div class="flex justify-content-end gap-2 mt-4">
+    <p-button label="Cancelar" severity="secondary" (onClick)="cerrar()" />
+    <p-button
+      label="Guardar Cambio"
+      severity="primary"
+      (onClick)="guardar()"
+      [disabled]="formGroupEstado.invalid"
+    />
+  </div>
+</div>

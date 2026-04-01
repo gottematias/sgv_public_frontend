@@ -1,0 +1,235 @@
+<div class="mb-4">
+  <p-iconfield iconPosition="left">
+    <p-inputicon styleClass="pi pi-search" />
+    <input
+      id="searchInput"
+      type="text"
+      pInputText
+      [(ngModel)]="searchQuery"
+      (input)="onSearchQueryChange(searchQuery)"
+      placeholder="Escriba nombre o código interno..."
+      class="w-full"
+      pTooltip="Busque productos o servicios por nombre o código"
+      tooltipPosition="top"
+      [showDelay]="500"
+      [life]="4000"
+    />
+  </p-iconfield>
+  @if (searchQuery) {
+    <p-button
+      icon="pi pi-times"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      size="small"
+      (onClick)="clearSearch()"
+      pTooltip="Limpiar búsqueda"
+      tooltipPosition="top"
+      [tooltipOptions]="{ life: 3000 }"
+      styleClass="absolute right-0 top-0 mt-1 mr-1"
+    />
+  }
+</div>
+
+@if (isSearching) {
+  <div class="text-center py-4 mb-4">
+    <i class="pi pi-spin pi-spinner text-primary" style="font-size: 2rem"></i>
+    <p class="mt-2 text-gray-600">Buscando...</p>
+  </div>
+}
+
+@if (searchResults.length > 0 && !isSearching) {
+  <div class="mb-4">
+    <h5 class="mb-3 text-gray-700">
+      <i class="pi pi-search mr-2"></i>
+      Resultados de búsqueda ({{ searchResults.length }})
+    </h5>
+    <div class="flex flex-column gap-2">
+      @for (item of searchResults; track item.id) {
+        <div
+          class="surface-card border-1 surface-border border-round px-3 py-2 transition-colors transition-duration-150"
+          [class.opacity-50]="
+            item.tipo === 'producto' &&
+            (!item.stockActual || item.stockActual === 0)
+          "
+          [class.cursor-not-allowed]="
+            item.tipo === 'producto' &&
+            (!item.stockActual || item.stockActual === 0)
+          "
+          [class.cursor-pointer]="
+            item.tipo === 'servicio' ||
+            (item.tipo === 'producto' &&
+              item.stockActual !== undefined &&
+              item.stockActual > 0)
+          "
+          [class.hover:surface-100]="
+            item.tipo === 'servicio' ||
+            (item.tipo === 'producto' &&
+              item.stockActual !== undefined &&
+              item.stockActual > 0)
+          "
+          tabindex="0"
+          role="button"
+          (click)="onItemClick(item)"
+          (keydown.enter)="onItemClick(item)"
+          (keydown.space)="onItemClick(item)"
+        >
+          <div class="flex align-items-center justify-content-between gap-3">
+            <!-- Izquierda: Código + Nombre + Stock -->
+            <div class="flex align-items-center gap-3 flex-1 overflow-hidden">
+              <span
+                class="text-gray-500 text-sm font-medium white-space-nowrap"
+              >
+                {{ item.codigoInterno }}
+              </span>
+              <span
+                class="font-semibold text-overflow-ellipsis overflow-hidden white-space-nowrap"
+              >
+                {{ item.nombre }}
+              </span>
+              @if (item.tipo === "producto" && item.stockActual !== undefined) {
+                <span class="text-sm text-gray-600 white-space-nowrap">
+                  Stock: {{ item.stockActual }}
+                </span>
+              }
+            </div>
+            <!-- Derecha: Precio -->
+            <div class="text-lg font-bold text-primary white-space-nowrap">
+              {{ item.precio | currency: "ARS" : "symbol-narrow" : "1.2-2" }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (searchQuery.length >= 2 && searchResults.length === 0 && !isSearching) {
+  <div class="text-center py-4 mb-4 surface-100 border-round">
+    <i class="pi pi-info-circle text-gray-500" style="font-size: 2rem"></i>
+    <p class="mt-2 text-gray-600 font-medium">
+      No se encontraron resultados para "{{ searchQuery }}"
+    </p>
+  </div>
+}
+
+@if (items.length > 0) {
+  <div class="mb-4">
+    <h4 class="mb-3">Items en el carrito</h4>
+    <p-dataview [value]="items">
+      <ng-template #list let-itemsList>
+        <div class="grid">
+          @for (item of itemsList; track $index) {
+            <div class="col-12">
+              <div class="surface-card border-round p-3 mb-2">
+                <div class="grid">
+                  <div
+                    class="col-12 md:col-1 flex align-items-center justify-content-center mb-2 md:mb-0"
+                  >
+                    <div
+                      class="flex align-items-center justify-content-center border-1 surface-border border-round"
+                      style="width: 80px; height: 80px; min-width: 80px"
+                    >
+                      <i
+                        [class]="
+                          item.tipo === 'producto'
+                            ? 'pi pi-box text-blue-500'
+                            : 'pi pi-wrench text-green-500'
+                        "
+                        style="font-size: 2.5rem"
+                      ></i>
+                    </div>
+                  </div>
+
+                  <div class="col-12 md:col-4">
+                    <div class="flex flex-column justify-content-center h-full">
+                      <div class="font-semibold text-lg mb-1">
+                        {{ item.nombre }}
+                      </div>
+                      <div class="text-sm text-gray-600">
+                        Código: {{ item.codigoInterno }}
+                      </div>
+                      <div class="text-sm mt-1">
+                        Precio unitario:
+                        {{
+                          item.precioUnitario
+                            | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                        }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12 md:col-4 mt-2 md:mt-0">
+                    <div
+                      class="flex flex-row align-items-center justify-content-center gap-2"
+                    >
+                      <p-inputNumber
+                        [(ngModel)]="item.cantidad"
+                        [min]="1"
+                        [max]="getMaxCantidad(item)"
+                        [step]="1"
+                        [showButtons]="true"
+                        buttonLayout="horizontal"
+                        decrementButtonClass="p-button-outlined p-button-sm"
+                        incrementButtonClass="p-button-outlined p-button-sm"
+                        inputStyleClass="text-center"
+                        [style]="{ width: '90px' }"
+                        (onInput)="onCantidadChange($index, item.cantidad)"
+                        pTooltip="Cantidad (use los botones +/- o escriba directamente)"
+                        tooltipPosition="top"
+                        [tooltipOptions]="{ life: 3000 }"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-12 md:col-3 mt-2 md:mt-0">
+                    <div
+                      class="flex align-items-center justify-content-between md:justify-content-end gap-3"
+                    >
+                      <div class="text-right">
+                        <div class="text-sm text-gray-600 mb-1">Subtotal</div>
+                        <div class="text-xl font-bold text-primary">
+                          {{
+                            item.subtotal
+                              | currency: "ARS" : "symbol-narrow" : "1.2-2"
+                          }}
+                        </div>
+                      </div>
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [outlined]="true"
+                        [rounded]="true"
+                        size="small"
+                        (onClick)="onEliminarItem($index)"
+                        pTooltip="Eliminar item"
+                        tooltipPosition="top"
+                        [tooltipOptions]="{ life: 3000 }"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </ng-template>
+    </p-dataview>
+
+    <div class="surface-ground border-round p-4 mt-3">
+      <div class="flex justify-content-between align-items-center">
+        <span class="text-2xl font-bold">Subtotal:</span>
+        <span class="text-2xl font-bold text-primary">
+          {{ getSubtotalItems() | currency: "ARS" : "symbol-narrow" : "1.2-2" }}
+        </span>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="text-center py-5 surface-ground border-round">
+    <i class="pi pi-shopping-cart text-gray-400" style="font-size: 3rem"></i>
+    <p class="text-gray-600 mt-3">
+      El carrito está vacío. Busque y agregue productos o servicios.
+    </p>
+  </div>
+}

@@ -1,0 +1,186 @@
+<p-confirmDialog
+  [key]="'mascotaLista'"
+  position="top"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<div class="card flex flex-column h-full">
+  <div class="flex p-2 gap-3 flex-wrap">
+    @if (puedeVerActivo) {
+      <p-select
+        [options]="filtrosActivo"
+        [(ngModel)]="filtroActivoSeleccionado"
+        optionLabel="label"
+        (onChange)="onFiltroActivoChange()"
+        placeholder="Filtrar por estado"
+        [style]="{ width: '140px' }"
+        pTooltip="Filtrar por estado activo/inactivo"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-select>
+    }
+
+    <p-select
+      [options]="filtrosPersona"
+      [(ngModel)]="filtroPersonaSeleccionado"
+      optionLabel="label"
+      (onChange)="onFiltroPersonaChange()"
+      (onClear)="onFiltroPersonaChange()"
+      placeholder="Filtrar por dueño"
+      [style]="{ width: '200px' }"
+      [showClear]="true"
+      [filter]="true"
+      filterPlaceholder="Buscar dueño"
+      pTooltip="Seleccione un dueño para filtrar"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-select>
+
+    <p-multiselect
+      [options]="filtrosEstado"
+      [(ngModel)]="filtrosEstadoSeleccionados"
+      optionLabel="label"
+      (onChange)="onFiltrosEstadoChange()"
+      placeholder="Filtrar por estado(s)"
+      [style]="{ width: '180px' }"
+      [maxSelectedLabels]="1"
+      pTooltip="Seleccione uno o más estados para filtrar"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-multiselect>
+
+    <div class="flex-1">
+      <p-iconfield iconPosition="left" class="w-full">
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput()"
+          placeholder="Buscar por nombre, dueño o raza"
+          class="w-full"
+          pTooltip="Escriba para buscar en el servidor"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="flex gap-2">
+      @if (habilitaCrearMascota) {
+        <p-button
+          styleClass="h-full"
+          [style]="{ 'aspect-ratio': '1' }"
+          (onClick)="crearMascotaBoton()"
+          icon="pi pi-plus"
+          pTooltip="Crear nueva mascota"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        />
+      }
+
+      <p-button
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+        icon="pi pi-pencil"
+        severity="warn"
+        [disabled]="!habilitaEditarMascota"
+        (onClick)="editarMascotaBoton()"
+        pTooltip="Editar mascota seleccionada"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+
+      <p-button
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+        icon="pi pi-trash"
+        severity="danger"
+        [disabled]="!habilitaEliminarMascota"
+        (onClick)="eliminarMascotaBoton()"
+        pTooltip="Eliminar mascota seleccionada"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+    </div>
+  </div>
+
+  <div #tableContainer class="table-container">
+    <p-table
+      #dt
+      [value]="listaMascotas"
+      selectionMode="single"
+      [(selection)]="mascotaSeleccionada"
+      (onRowSelect)="onRowSelect()"
+      (onRowUnselect)="onRowUnselect()"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      styleClass="p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Raza</th>
+          <th scope="col">Sexo</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Dueño</th>
+          @if (puedeVerActivo) {
+            <th scope="col">Activo</th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-mascota>
+        <tr [pSelectableRow]="mascota">
+          <td>{{ mascota.nombre }}</td>
+          <td>{{ mascota.raza?.nombre || "-" }}</td>
+          <td>
+            <p-tag
+              [value]="
+                mascota.sexo === 'M'
+                  ? 'Macho'
+                  : mascota.sexo === 'F'
+                    ? 'Hembra'
+                    : 'Indefinido'
+              "
+              [severity]="
+                mascota.sexo === 'M'
+                  ? 'info'
+                  : mascota.sexo === 'F'
+                    ? 'danger'
+                    : 'secondary'
+              "
+            >
+            </p-tag>
+          </td>
+          <td>
+            <p-tag
+              [value]="mascota.mascotaEstado?.nombre || '-'"
+              [severity]="getMascotaEstadoSeverity(mascota.mascotaEstado?.id)"
+            >
+            </p-tag>
+          </td>
+          <td>
+            {{ mascota.persona?.apellidos }}, {{ mascota.persona?.nombres }}
+          </td>
+          @if (puedeVerActivo) {
+            <td>
+              <span
+                [class]="
+                  mascota.activo
+                    ? 'pi pi-check-circle text-green-500'
+                    : 'pi pi-times-circle text-red-500'
+                "
+              ></span>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No se encontraron mascotas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

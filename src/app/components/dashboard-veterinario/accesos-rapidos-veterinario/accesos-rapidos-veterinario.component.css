@@ -1,0 +1,14 @@
+/* Estilos para los botones de acceso rápido */
+p-button button {
+  height: 80px;
+  font-size: 1rem;
+}
+
+p-button button i {
+  font-size: 1.8rem;
+}
+
+p-button button:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s;
+}

@@ -1,0 +1,69 @@
+<div>
+  <h2 class="text-xl font-semibold mb-3">Accesos Rápidos</h2>
+  <div class="grid">
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearPersona">
+      <p-button
+        label="Crear Persona"
+        icon="pi pi-user-plus"
+        severity="info"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearPersona()"
+        pTooltip="Crear nueva persona"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearMascota">
+      <p-button
+        label="Crear Mascota"
+        icon="pi pi-heart"
+        severity="success"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearMascota()"
+        pTooltip="Crear nueva mascota"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearTurno">
+      <p-button
+        label="Crear Turno"
+        icon="pi pi-calendar-plus"
+        severity="warn"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearTurno()"
+        pTooltip="Crear nuevo turno"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearVacuna">
+      <p-button
+        label="Crear Vacuna"
+        icon="pi pi-shield"
+        severity="contrast"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearVacuna()"
+        pTooltip="Crear nueva vacuna"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearClinica">
+      <p-button
+        label="Crear Historial Clínico"
+        icon="pi pi-file-edit"
+        severity="help"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearHistorialClinico()"
+        pTooltip="Crear nuevo historial clínico"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,217 @@
+<p-confirmDialog
+  [key]="'clinicaLista'"
+  position="top"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<div class="card flex flex-column h-full">
+  <div class="flex p-2 gap-3 flex-wrap">
+    @if (puedeVerActivo) {
+      <p-select
+        [options]="filtrosActivo"
+        [(ngModel)]="filtroActivoSeleccionado"
+        optionLabel="label"
+        (onChange)="onFiltroActivoChange()"
+        placeholder="Filtrar por estado"
+        [style]="{ width: '140px' }"
+        pTooltip="Filtrar por estado activo/inactivo"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-select>
+    }
+
+    @if (showMascotaFilter) {
+      <p-select
+        [options]="mascotas"
+        [(ngModel)]="filtroMascotaSeleccionada"
+        (onChange)="onFiltroMascotaChange()"
+        (onClear)="onFiltroMascotaChange()"
+        placeholder="Filtrar por mascota"
+        optionLabel="nombre"
+        optionValue="id"
+        [showClear]="true"
+        [filter]="true"
+        [style]="{ width: '250px' }"
+        pTooltip="Filtrar por mascota"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      >
+        <ng-template let-mascota pTemplate="item">
+          {{ mascota.nombre }}
+          <span *ngIf="mascota.persona">
+            ({{ mascota.persona.apellidos }})
+          </span>
+        </ng-template>
+      </p-select>
+    }
+
+    <p-select
+      [options]="veterinarios"
+      [(ngModel)]="filtroVeterinarioSeleccionado"
+      (onChange)="onFiltroVeterinarioChange()"
+      (onClear)="onFiltroVeterinarioChange()"
+      placeholder="Filtrar por veterinario"
+      optionValue="id"
+      [showClear]="true"
+      [filter]="true"
+      [style]="{ width: '250px' }"
+      pTooltip="Filtrar por veterinario"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    >
+      <ng-template let-vet pTemplate="item">
+        {{ getVeterinarioLabel(vet) }}
+      </ng-template>
+      <ng-template let-vet pTemplate="selectedItem">
+        {{ getVeterinarioLabel(vet) }}
+      </ng-template>
+    </p-select>
+
+    <p-datepicker
+      [(ngModel)]="filtroFechaDesde"
+      [maxDate]="filtroFechaHasta"
+      (onSelect)="onFechaDesdeChange()"
+      (onClear)="onFechaDesdeChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      placeholder="Fecha desde"
+      dateFormat="dd/mm/yy"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha inicio del rango de consultas"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-datepicker
+      [(ngModel)]="filtroFechaHasta"
+      [minDate]="filtroFechaDesde"
+      (onSelect)="onFechaHastaChange()"
+      (onClear)="onFechaHastaChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      placeholder="Fecha hasta"
+      dateFormat="dd/mm/yy"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha fin del rango de consultas"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <div class="flex-1"></div>
+
+    @if (showToolbar) {
+      <div class="flex gap-2">
+        @if (habilitaCrear) {
+          <p-button
+            styleClass="h-full"
+            [style]="{ 'aspect-ratio': '1' }"
+            (onClick)="crearHistorialBoton()"
+            icon="pi pi-plus"
+            pTooltip="Crear nueva consulta"
+            tooltipPosition="bottom"
+            [tooltipOptions]="{ life: 3000 }"
+          />
+        }
+
+        <p-button
+          styleClass="h-full"
+          [style]="{ 'aspect-ratio': '1' }"
+          icon="pi pi-pencil"
+          severity="warn"
+          [disabled]="!habilitaEditar"
+          (onClick)="editarHistorialBoton()"
+          pTooltip="Editar consulta seleccionada"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        />
+
+        <p-button
+          styleClass="h-full"
+          [style]="{ 'aspect-ratio': '1' }"
+          icon="pi pi-trash"
+          severity="danger"
+          [disabled]="!habilitaEliminar"
+          (onClick)="eliminarHistorialBoton()"
+          pTooltip="Eliminar consulta seleccionada"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        />
+      </div>
+    }
+  </div>
+
+  <div #tableContainer class="table-container">
+    <p-table
+      #dt
+      [value]="listaHistoriales"
+      selectionMode="single"
+      [(selection)]="historialSeleccionado"
+      (onRowSelect)="onRowSelect()"
+      (onRowUnselect)="onRowUnselect()"
+      [tableStyle]="{ 'min-width': '70rem' }"
+      styleClass="p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Mascota</th>
+          <th scope="col">Dueño</th>
+          <th scope="col">Veterinario</th>
+          <th scope="col">Motivo Consulta</th>
+          @if (puedeVerActivo) {
+            <th scope="col">Activo</th>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-historial>
+        <tr
+          [pSelectableRow]="!clickToOpen ? historial : null"
+          (click)="clickToOpen && onRowClick(historial)"
+          [ngClass]="{ 'cursor-pointer': clickToOpen }"
+        >
+          <td>{{ historial.fechaConsulta | date: "dd/MM/yyyy HH:mm" }}</td>
+          <td>{{ historial.mascota?.nombre || "-" }}</td>
+          <td>
+            <span *ngIf="historial.mascota?.persona">
+              {{ historial.mascota.persona.apellidos }},
+              {{ historial.mascota.persona.nombres }}
+            </span>
+            <span *ngIf="!historial.mascota?.persona">-</span>
+          </td>
+          <td>{{ getVeterinarioNombre(historial) }}</td>
+          <td>
+            <span
+              [pTooltip]="historial.motivoConsulta"
+              tooltipPosition="top"
+              [life]="5000"
+            >
+              {{
+                historial.motivoConsulta.length > 50
+                  ? (historial.motivoConsulta | slice: 0 : 50) + "..."
+                  : historial.motivoConsulta
+              }}
+            </span>
+          </td>
+          @if (puedeVerActivo) {
+            <td>
+              <span
+                [class]="
+                  historial.activo
+                    ? 'pi pi-check-circle text-green-500'
+                    : 'pi pi-times-circle text-red-500'
+                "
+              ></span>
+            </td>
+          }
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No se encontraron consultas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

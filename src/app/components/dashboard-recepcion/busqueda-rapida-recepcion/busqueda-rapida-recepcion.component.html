@@ -1,0 +1,81 @@
+<div>
+  <h2 class="text-xl font-semibold mb-3">Búsqueda Rápida</h2>
+
+  <div class="grid">
+    <div class="col-12 md:col-6">
+      <label for="buscar-persona" class="block mb-2 font-medium"
+        >Buscar Persona</label
+      >
+      <p-autoComplete
+        inputId="buscar-persona"
+        [(ngModel)]="personaSeleccionadaObj"
+        [suggestions]="personasBuscadas"
+        (completeMethod)="buscarPersonas($event)"
+        (onSelect)="onPersonaSeleccionadaAutocomplete($event)"
+        field="apellidos"
+        [minLength]="2"
+        [delay]="300"
+        placeholder="Buscar por nombre, apellido o documento..."
+        [forceSelection]="false"
+        [showClear]="true"
+        [dropdown]="false"
+        [style]="{ width: '100%' }"
+      >
+        <ng-template let-persona pTemplate="item">
+          <div class="flex justify-content-between align-items-center p-2">
+            <div class="flex-1">
+              <div class="font-semibold text-lg">
+                {{ persona.apellidos }}, {{ persona.nombres }}
+              </div>
+              <div class="text-500" *ngIf="persona.documento">
+                <i class="pi pi-id-card mr-1"></i>
+                {{ persona.documento }}
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="empty">
+          <div class="text-center text-500 p-3">No se encontraron personas</div>
+        </ng-template>
+      </p-autoComplete>
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="buscar-mascota" class="block mb-2 font-medium"
+        >Buscar Mascota</label
+      >
+      <p-autoComplete
+        inputId="buscar-mascota"
+        [(ngModel)]="mascotaSeleccionadaObj"
+        [suggestions]="mascotasBuscadas"
+        (completeMethod)="buscarMascotas($event)"
+        (onSelect)="onMascotaSeleccionadaAutocomplete($event)"
+        field="nombre"
+        [minLength]="2"
+        [delay]="300"
+        placeholder="Buscar por nombre de mascota o dueño..."
+        [forceSelection]="false"
+        [showClear]="true"
+        [dropdown]="false"
+        [style]="{ width: '100%' }"
+      >
+        <ng-template let-mascota pTemplate="item">
+          <div class="flex justify-content-between align-items-center p-2">
+            <div class="flex-1">
+              <div class="font-semibold text-lg">{{ mascota.nombre }}</div>
+              <div class="text-500">
+                <i class="pi pi-user mr-1"></i>
+                {{ getDuenoNombre(mascota.persona) }}
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="empty">
+          <div class="text-center text-500 p-3">No se encontraron mascotas</div>
+        </ng-template>
+      </p-autoComplete>
+    </div>
+  </div>
+</div>

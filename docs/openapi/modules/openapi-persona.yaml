@@ -1,0 +1,585 @@
+# OpenAPI Persona Module
+# This file contains all Persona-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Persona Module
+  version: 1.0.0
+  description: Módulo de gestión de personas, contactos y direcciones
+
+paths:
+  /persona/create:
+    post:
+      tags:
+        - Persona
+      summary: Crear persona
+      description: |
+        Crea una nueva persona (cliente/propietario).
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+      operationId: personaCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonaDto"
+      responses:
+        "201":
+          description: Persona creada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/persona/update/{id}":
+    put:
+      tags:
+        - Persona
+      summary: Actualizar persona
+      description: |
+        Actualiza los datos de una persona existente.
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+      operationId: personaUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonaDto"
+      responses:
+        "200":
+          description: Persona actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/persona/get/{id}":
+    get:
+      tags:
+        - Persona
+      summary: Obtener persona por ID
+      operationId: personaGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Persona encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOPersona"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /persona/list:
+    get:
+      tags:
+        - Persona
+      summary: Listar personas
+      operationId: personaList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de personas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOPersonaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/persona/delete/{id}":
+    delete:
+      tags:
+        - Persona
+      summary: Eliminar persona (soft delete)
+      description: |
+        Elimina lógicamente una persona (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: personaDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Persona eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /persona/documentotipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de documento
+      operationId: personaDocumentoTipoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de documento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTODocumentoTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /contacto/listcontactotipo:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de contacto
+      operationId: contactoListContactoTipo
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de contacto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOContactoTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /direccion/listciudades:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar ciudades
+      operationId: direccionListCiudades
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de ciudades
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOCiudadArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  # Geography Entities
+  schemas:
+    Pais:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+    Provincia:
+      type: object
+      required:
+        - id
+        - nombre
+        - idPais
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        idPais:
+          type: integer
+        pais:
+          $ref: "#/components/schemas/Pais"
+    Ciudad:
+      type: object
+      required:
+        - id
+        - nombre
+        - codigoPostal
+        - idProvincia
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        codigoPostal:
+          type: string
+          maxLength: 50
+        idProvincia:
+          type: integer
+        provincia:
+          $ref: "#/components/schemas/Provincia"
+    ResponseDTOCiudadArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ciudad"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+
+    # Document Type
+    DocumentoTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTODocumentoTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentoTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+
+    # Contact Type
+    ContactoTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOContactoTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactoTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+
+    # Contact
+    Contacto:
+      type: object
+      required:
+        - id
+        - dato
+        - idContactoTipo
+        - idPersona
+      properties:
+        id:
+          type: integer
+        dato:
+          type: string
+          maxLength: 255
+        idContactoTipo:
+          type: integer
+        idPersona:
+          type: integer
+        contactoTipo:
+          $ref: "#/components/schemas/ContactoTipo"
+    CreateContactoDto:
+      type: object
+      required:
+        - dato
+        - idContactoTipo
+        - idPersona
+      properties:
+        dato:
+          type: string
+          minLength: 1
+          maxLength: 200
+        idContactoTipo:
+          type: integer
+        idPersona:
+          type: integer
+    UpdateContactoDto:
+      type: object
+      properties:
+        dato:
+          type: string
+          minLength: 1
+          maxLength: 200
+        idContactoTipo:
+          type: integer
+
+    # Address
+    Direccion:
+      type: object
+      required:
+        - id
+        - idCiudad
+        - idPersona
+      properties:
+        id:
+          type: integer
+        calle:
+          type: string
+          maxLength: 255
+          nullable: true
+        numero:
+          type: string
+          maxLength: 20
+          nullable: true
+        piso:
+          type: string
+          maxLength: 20
+          nullable: true
+        departamento:
+          type: string
+          maxLength: 20
+          nullable: true
+        observaciones:
+          type: string
+          nullable: true
+        idCiudad:
+          type: integer
+        idPersona:
+          type: integer
+        ciudad:
+          $ref: "#/components/schemas/Ciudad"
+    CreateDireccionDto:
+      type: object
+      required:
+        - idCiudad
+        - idPersona
+      properties:
+        calle:
+          type: string
+          maxLength: 255
+        numero:
+          type: string
+          maxLength: 20
+        piso:
+          type: string
+          maxLength: 20
+        departamento:
+          type: string
+          maxLength: 20
+        observaciones:
+          type: string
+        idCiudad:
+          type: integer
+        idPersona:
+          type: integer
+    UpdateDireccionDto:
+      type: object
+      properties:
+        calle:
+          type: string
+          maxLength: 255
+        numero:
+          type: string
+          maxLength: 20
+        piso:
+          type: string
+          maxLength: 20
+        departamento:
+          type: string
+          maxLength: 20
+        observaciones:
+          type: string
+        idCiudad:
+          type: integer
+
+    # Persona
+    Persona:
+      type: object
+      required:
+        - id
+        - nombres
+        - apellidos
+        - documento
+        - idDocumentoTipo
+        - activo
+      properties:
+        id:
+          type: integer
+        nombres:
+          type: string
+          maxLength: 100
+        apellidos:
+          type: string
+          maxLength: 100
+        documento:
+          type: string
+          maxLength: 100
+        idDocumentoTipo:
+          type: integer
+        activo:
+          type: boolean
+        documentoTipo:
+          $ref: "#/components/schemas/DocumentoTipo"
+        direcciones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Direccion"
+        contactos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contacto"
+    CreatePersonaDto:
+      type: object
+      required:
+        - nombres
+        - apellidos
+        - documento
+        - idDocumentoTipo
+      properties:
+        nombres:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Juan Carlos
+        apellidos:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Rodriguez
+        documento:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "30123456"
+        idDocumentoTipo:
+          type: integer
+          example: 1
+        direccion:
+          $ref: "#/components/schemas/CreateDireccionDto"
+        contactos:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CreateContactoDto"
+    UpdatePersonaDto:
+      type: object
+      properties:
+        nombres:
+          type: string
+          minLength: 1
+          maxLength: 100
+        apellidos:
+          type: string
+          minLength: 1
+          maxLength: 100
+        documento:
+          type: string
+          minLength: 1
+          maxLength: 100
+        idDocumentoTipo:
+          type: integer
+        direccion:
+          $ref: "#/components/schemas/UpdateDireccionDto"
+        contactos:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/UpdateContactoDto"
+        activo:
+          type: boolean
+          description: Estado activo del registro
+          example: true
+    ResponseDTOPersona:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Persona"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOPersonaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Persona"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

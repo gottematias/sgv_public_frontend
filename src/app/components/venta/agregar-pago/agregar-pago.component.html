@@ -1,0 +1,189 @@
+<div class="p-4">
+  <div class="surface-ground border-round p-3 mb-4">
+    <div class="flex justify-content-between mb-2">
+      <span class="font-semibold">Total Venta:</span>
+      <span class="text-lg font-bold">{{
+        totalVenta | currency: "ARS" : "symbol-narrow" : "1.2-2"
+      }}</span>
+    </div>
+    <div class="flex justify-content-between mb-2">
+      <span class="font-semibold">Total Pagado:</span>
+      <span class="text-green-600 font-bold">{{
+        totalPagado | currency: "ARS" : "symbol-narrow" : "1.2-2"
+      }}</span>
+    </div>
+    <div class="flex justify-content-between">
+      <span class="font-semibold text-lg">Saldo Pendiente:</span>
+      <span class="text-red-600 font-bold text-xl">{{
+        saldoPendiente | currency: "ARS" : "symbol-narrow" : "1.2-2"
+      }}</span>
+    </div>
+  </div>
+
+  <form [formGroup]="formGroupPago">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label for="metodoPago" class="block mb-2 font-semibold">
+          Método de Pago <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="metodoPago"
+          formControlName="metodoPago"
+          [options]="metodosPago"
+          optionLabel="nombre"
+          placeholder="Seleccione método"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          (onChange)="onMetodoPagoChange($event.value)"
+          pTooltip="Seleccione el método de pago"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-metodo pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ metodo.nombre }}</div>
+              @if (metodo.descripcion) {
+                <div class="text-sm text-gray-600">
+                  {{ metodo.descripcion }}
+                </div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="estadoPago" class="block mb-2 font-semibold">
+          Estado del Pago <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="estadoPago"
+          formControlName="estadoPago"
+          [options]="estadosPago"
+          optionLabel="nombre"
+          placeholder="Seleccione estado"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          pTooltip="Seleccione el estado del pago"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-estado pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ estado.nombre }}</div>
+              @if (estado.descripcion) {
+                <div class="text-sm text-gray-600">
+                  {{ estado.descripcion }}
+                </div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="montoBonificado" class="block mb-2 font-semibold">
+          Monto Bonificado (Opcional)
+        </label>
+        <p-inputNumber
+          inputId="montoBonificado"
+          formControlName="montoBonificado"
+          mode="currency"
+          currency="ARS"
+          locale="es-AR"
+          placeholder="Opcional"
+          [min]="0"
+          [max]="getMaxMontoBonificado()"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [style]="{ width: '100%' }"
+          pTooltip="Monto de descuento o bonificación (opcional)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (
+          formGroupPago.get("montoBonificado")?.value >
+            getMaxMontoBonificado() &&
+          formGroupPago.get("montoBonificado")?.value > 0
+        ) {
+          <small class="text-red-500 block mt-1">
+            El monto bonificado excede el saldo disponible ({{
+              getMaxMontoBonificado() | number: "1.2-2"
+            }})
+          </small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="monto" class="block mb-2 font-semibold">
+          Monto <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="monto"
+          formControlName="monto"
+          mode="currency"
+          currency="ARS"
+          locale="es-AR"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [min]="0.01"
+          [max]="getMaxMonto()"
+          [style]="{ width: '100%' }"
+          pTooltip="Ingrese el monto del pago (máximo: saldo pendiente)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (
+          formGroupPago.get("monto")?.value > getMaxMonto() &&
+          formGroupPago.get("monto")?.value > 0
+        ) {
+          <small class="text-red-500 block mt-1">
+            El monto excede el saldo pendiente ({{
+              getMaxMonto() | number: "1.2-2"
+            }})
+          </small>
+        }
+      </div>
+
+      <div class="col-12">
+        <label for="referencia" class="block mb-2 font-semibold">
+          Referencia
+          @if (formGroupPago.get("metodoPago")?.value?.requiereReferencia) {
+            <span class="text-red-500">*</span>
+          }
+        </label>
+        <input
+          id="referencia"
+          type="text"
+          pInputText
+          formControlName="referencia"
+          class="w-full"
+          placeholder="Ej: Número de transacción (opcional)"
+          pTooltip="Referencia del pago (requerida según método de pago)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+    </div>
+  </form>
+
+  <div class="flex justify-content-between gap-2 mt-4">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button
+      label="Guardar Pago"
+      severity="success"
+      (onClick)="guardar()"
+      [disabled]="formGroupPago.invalid"
+    />
+  </div>
+</div>

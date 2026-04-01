@@ -1,0 +1,817 @@
+# OpenAPI Venta Module
+# Sales, payments, and transaction management endpoints
+
+paths:
+  /venta/create:
+    post:
+      tags:
+        - Venta
+      summary: Crear venta con pagos opcionales
+      description: |
+        Crea una venta con sus detalles (productos/servicios) y opcionalmente registra pagos en la misma transacción.
+
+        **Roles requeridos:** CAJERO (3), ADMINISTRADOR_SISTEMA (7)
+
+        **Características:**
+        - Actualiza automáticamente el stock de productos
+        - Crea movimientos de stock tipo "Venta"
+        - Preserva precios históricos en los detalles
+        - **NUEVO:** Permite incluir array opcional de pagos que se crean junto con la venta
+        - Si los pagos aprobados cubren el total, la venta se marca como COMPLETADA automáticamente
+
+        **Estados de venta:**
+        - PENDIENTE (1): Venta sin pagos o con pagos parciales
+        - COMPLETADA (2): Venta con pagos aprobados >= totalFinal
+        - CANCELADA (3): Venta anulada
+
+        **Validaciones de pagos:**
+        - Solo pagos con estado APROBADO (1) cuentan para completar la venta
+        - La suma de pagos (monto + montoBonificado) no puede exceder totalFinal (tolerancia: 0.01)
+        - Si se incluyen pagos, se validan foreign keys (idMetodoPago, idEstado)
+
+        **Casos de uso:**
+        - Sin pagos: `{ "detalles": [...] }` → Venta PENDIENTE
+        - Pago parcial: `{ "detalles": [...], "pagos": [{ "monto": 500, ... }] }` → Venta PENDIENTE
+        - Pago completo: `{ "detalles": [...], "pagos": [{ "monto": 1000, "idEstado": 1, ... }] }` → Venta COMPLETADA
+        - Múltiples pagos: `{ "detalles": [...], "pagos": [pago1, pago2] }` → Estado según total
+
+        > El empleado se resuelve automáticamente desde el token JWT del usuario autenticado.
+      operationId: ventaCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVentaDto"
+            examples:
+              ventaSinPagos:
+                summary: Venta sin pagos
+                value:
+                  idCliente: 5
+                  detalles:
+                    - idProducto: 10
+                      cantidad: 2
+                    - idServicio: 3
+                      cantidad: 1
+              ventaConPagoCompleto:
+                summary: Venta con pago completo en efectivo
+                value:
+                  idCliente: 5
+                  detalles:
+                    - idProducto: 10
+                      cantidad: 1
+                  pagos:
+                    - monto: 1500.00
+                      idMetodoPago: 1
+                      idEstado: 1
+                      referencia: "CASH-001"
+              ventaConMultiplesPagos:
+                summary: Venta con múltiples métodos de pago
+                value:
+                  detalles:
+                    - idProducto: 10
+                      cantidad: 2
+                  pagos:
+                    - monto: 1000.00
+                      idMetodoPago: 1
+                      idEstado: 1
+                    - monto: 500.00
+                      montoBonificado: 50.00
+                      idMetodoPago: 2
+                      idEstado: 1
+                      referencia: "CARD-12345"
+      responses:
+        "201":
+          description: Venta creada exitosamente. Retorna el ID de la venta. El estado será PENDIENTE o COMPLETADA dependiendo de los pagos.
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          description: |
+            Solicitud inválida - Posibles causas:
+            - Detalles vacíos o inválidos
+            - Stock insuficiente para productos
+            - Total de pagos excede el total de la venta
+            - Método de pago inactivo o no existe
+            - Estado de pago inválido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/venta/update/{id}":
+    put:
+      tags:
+        - Venta
+      summary: Actualizar venta
+      description: |
+        Solo permite actualizar ventas en estado "Pendiente".
+
+        **Roles requeridos:** CAJERO (3), ADMINISTRADOR_SISTEMA (7)
+      operationId: ventaUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVentaDto"
+      responses:
+        "200":
+          description: Venta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+        "409":
+          description: Conflicto - La venta no está en estado Pendiente
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+  "/venta/get/{id}":
+    get:
+      tags:
+        - Venta
+      summary: Obtener venta por ID
+      operationId: ventaGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Venta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVenta"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /venta/list:
+    get:
+      tags:
+        - Venta
+      summary: Listar ventas
+      operationId: ventaList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - name: idCliente
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por cliente
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por empleado
+        - name: idEstado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por estado
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Lista de ventas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVentaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/venta/anular/{id}":
+    post:
+      tags:
+        - Venta
+      summary: Anular venta
+      description: |
+        Anula una venta y revierte los movimientos de stock.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+
+        - Cambia estado a "Cancelada"
+        - Crea movimientos tipo "Devolución Cliente"
+        - Restaura stock de productos
+        - El empleado responsable se resuelve automáticamente desde el token JWT del usuario autenticado
+      operationId: ventaAnular
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnularVentaDto"
+      responses:
+        "200":
+          description: Venta anulada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+        "409":
+          description: Conflicto - La venta ya está cancelada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+  /venta/estado/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar estados de venta
+      operationId: ventaEstadoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de estados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOVentaEstadoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /venta/anulacion/motivo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar motivos de anulación de venta
+      operationId: ventaAnulacionMotivoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de motivos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAnulacionVentaMotivoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /pago/create:
+    post:
+      tags:
+        - Venta
+      summary: Crear pago
+      description: |
+        Registra un pago para una venta.
+
+        **Roles requeridos:** CAJERO (3), ADMINISTRADOR_SISTEMA (7)
+
+        - Actualiza automáticamente el estado de la venta a "Completada" si está totalmente pagada
+      operationId: pagoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePagoDto"
+      responses:
+        "201":
+          description: Pago creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/pago/{id}/estado":
+    patch:
+      tags:
+        - Venta
+      summary: Actualizar estado de un pago
+      description: |
+        Actualiza el estado de un pago existente y recalcula automáticamente el estado de la venta asociada.
+
+        **Roles requeridos:** CAJERO (3), ADMINISTRADOR_SISTEMA (7)
+
+        **Casos de uso:**
+        - Aprobar un pago pendiente (PENDIENTE → APROBADO) y auto-completar la venta si está totalmente pagada
+        - Rechazar un pago (PENDIENTE/APROBADO → RECHAZADO) y revertir venta a PENDIENTE si era COMPLETADA
+        - Corregir el estado de un pago con sincronización automática del estado de la venta
+
+        **Estados de pago:**
+        - APROBADO (1): Pago confirmado y válido
+        - RECHAZADO (2): Pago rechazado o inválido
+        - PENDIENTE (3): Pago en proceso de verificación
+
+        **Lógica de sincronización con Venta:**
+        - Si pagos aprobados >= totalFinal → Venta cambia a COMPLETADA
+        - Si pagos aprobados < totalFinal → Venta cambia/permanece PENDIENTE
+        - Validación de sobre-pago: Rechaza si aprobar un pago excedería el total de la venta
+
+        **Validaciones:**
+        - El pago (id en path) debe existir
+        - El estado (idEstado en body) debe ser válido
+        - No se permite sobre-pago al aprobar pagos
+        - Todas las operaciones son transaccionales (rollback automático en errores)
+
+        **⚠️ BREAKING CHANGE desde v1.1.0:**
+        - Ruta cambió de `PATCH /pago/estado` a `PATCH /pago/{id}/estado`
+        - El ID del pago ahora va en el path (RESTful), no en el body
+        - El DTO solo contiene `idEstado` (se eliminó `idPago`)
+      operationId: pagoUpdateEstado
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEstadoDto"
+            examples:
+              aprobarPago:
+                summary: Aprobar un pago pendiente
+                value:
+                  idEstado: 1
+              rechazarPago:
+                summary: Rechazar un pago
+                value:
+                  idEstado: 2
+              marcarPendiente:
+                summary: Cambiar a pendiente
+                value:
+                  idEstado: 3
+      responses:
+        "200":
+          description: |
+            Estado del pago actualizado exitosamente.
+            El estado de la venta también se recalculó automáticamente.
+            Retorna el ID del pago actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+              example:
+                data: 42
+                code: 0
+                error: ""
+        "400":
+          description: |
+            Solicitud inválida - Posibles causas:
+            - Error de validación en los campos
+            - Aprobar el pago excedería el total de la venta (sobre-pago)
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              examples:
+                validationError:
+                  summary: Error de validación
+                  value:
+                    data: null
+                    code: 400
+                    error: "idEstado debe ser un número"
+                overPaymentError:
+                  summary: Sobre-pago detectado
+                  value:
+                    data: null
+                    code: 400
+                    error: "El monto total de pagos aprobados excede el total de la venta. Total venta: 1000, Total pagado: 1200"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          description: No encontrado - El pago o el estado no existen
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              examples:
+                pagoNotFound:
+                  summary: Pago no encontrado
+                  value:
+                    data: null
+                    code: 404
+                    error: "Pago no encontrada"
+                estadoNotFound:
+                  summary: Estado inválido
+                  value:
+                    data: null
+                    code: 404
+                    error: "PagoEstado no encontrada"
+  /pago/list:
+    get:
+      tags:
+        - Venta
+      summary: Listar pagos
+      operationId: pagoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idVenta
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por venta
+        - name: idMetodoPago
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por método de pago
+        - name: idEstado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por estado
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Lista de pagos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOPagoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /pago/metodo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar métodos de pago activos
+      operationId: pagoMetodoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de métodos de pago
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMetodoPagoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /pago/estados:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar estados de pago
+      description: |
+        Obtiene el catálogo completo de estados de pago disponibles.
+
+        **⚠️ BREAKING CHANGE desde v1.1.0:**
+        - Ruta cambió de `GET /pago/estado/list` a `GET /pago/estados`
+        - Sigue convención RESTful: plural para listar recursos
+      operationId: pagoEstadoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de estados de pago
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOPagoEstadoArray"
+              example:
+                data:
+                  - id: 1
+                    nombre: "APROBADO"
+                  - id: 2
+                    nombre: "RECHAZADO"
+                  - id: 3
+                    nombre: "PENDIENTE"
+                code: 0
+                error: ""
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    DetalleVentaDto:
+      type: object
+      required:
+        - cantidad
+      properties:
+        idProducto:
+          type: integer
+          description: ID del producto (mutuamente exclusivo con idServicio)
+        idServicio:
+          type: integer
+          description: ID del servicio (mutuamente exclusivo con idProducto)
+        cantidad:
+          type: integer
+          minimum: 1
+          description: Cantidad del producto o servicio
+    CreatePagoInVentaDto:
+      type: object
+      description: |
+        DTO para crear pagos junto con la venta. Similar a CreatePagoDto pero sin idVenta (se asigna automáticamente).
+        Los pagos con estado APROBADO (1) cuentan para completar la venta automáticamente.
+      required:
+        - monto
+        - idMetodoPago
+        - idEstado
+      properties:
+        monto:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Monto del pago. Debe ser mayor a 0.01.
+          example: 1500.00
+        montoBonificado:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Monto bonificado, descuento o crédito aplicado. Cuenta para el total pagado.
+          example: 50.00
+        referencia:
+          type: string
+          maxLength: 100
+          description: Referencia del pago (número de transacción, cheque, etc.)
+          example: "CARD-12345"
+        idMetodoPago:
+          type: integer
+          description: ID del método de pago activo (efectivo, tarjeta, transferencia, etc.)
+          example: 1
+        idEstado:
+          type: integer
+          description: |
+            ID del estado del pago:
+            - 1 = APROBADO (cuenta para completar la venta)
+            - 2 = RECHAZADO (no cuenta)
+            - 3 = PENDIENTE (no cuenta)
+          example: 1
+    CreateVentaDto:
+      type: object
+      required:
+        - detalles
+      properties:
+        idCliente:
+          type: integer
+          description: ID del cliente/persona asociado a la venta (opcional)
+        montoAjusteRedondeo:
+          type: number
+          format: decimal
+          description: Ajuste por redondeo aplicado al total (puede ser positivo o negativo)
+          example: 0.50
+        detalles:
+          type: array
+          minItems: 1
+          description: Lista de productos/servicios vendidos (mínimo 1 item)
+          items:
+            $ref: "#/components/schemas/DetalleVentaDto"
+        pagos:
+          type: array
+          description: |
+            **NUEVO:** Array opcional de pagos a crear junto con la venta.
+            - Si se omite o está vacío, la venta se crea en estado PENDIENTE
+            - Si los pagos APROBADOS cubren el totalFinal, la venta pasa a estado COMPLETADA
+            - La suma de (monto + montoBonificado) no puede exceder totalFinal (tolerancia: 0.01)
+            - Los pagos se crean en la misma transacción que la venta (todo o nada)
+          items:
+            $ref: "#/components/schemas/CreatePagoInVentaDto"
+    UpdateVentaDto:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        detalles:
+          type: array
+          items:
+            $ref: "#/components/schemas/DetalleVentaDto"
+    VentaEstado:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+    ResponseDTOVenta:
+      type: object
+      properties:
+        data:
+          type: object
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOVentaArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOVentaEstadoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/VentaEstado"
+        code:
+          type: integer
+        error:
+          type: string
+    AnularVentaDto:
+      type: object
+      required:
+        - idAnulacionVentaMotivo
+      properties:
+        idAnulacionVentaMotivo:
+          type: integer
+        observaciones:
+          type: string
+    AnulacionVentaMotivo:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+    ResponseDTOAnulacionVentaMotivoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnulacionVentaMotivo"
+        code:
+          type: integer
+        error:
+          type: string
+    CreatePagoDto:
+      type: object
+      description: Crea un pago asociado a una venta. El sistema valida automáticamente que la suma de pagos aprobados no exceda el total de la venta (con tolerancia de 0.01 para redondeo). Si el pago está aprobado y completa el total, la venta cambia automáticamente a estado COMPLETADA.
+      required:
+        - monto
+        - idMetodoPago
+        - idVenta
+        - idEstado
+      properties:
+        monto:
+          type: number
+          description: Monto del pago. Debe ser mayor a 0. No puede exceder el monto restante de la venta.
+        montoBonificado:
+          type: number
+          description: Monto bonificado o descontado. Debe ser mayor o igual a 0.
+        referencia:
+          type: string
+          description: Referencia del pago (número de transacción, cheque, etc.)
+        idMetodoPago:
+          type: integer
+          description: ID del método de pago (efectivo, tarjeta, transferencia, etc.)
+        idVenta:
+          type: integer
+          description: ID de la venta a la que pertenece este pago
+        idEstado:
+          type: integer
+          description: ID del estado del pago (1=Pendiente, 2=Aprobado, 3=Rechazado)
+    UpdateEstadoDto:
+      type: object
+      description: |
+        Actualiza el estado de un pago existente (el ID del pago va en la ruta).
+
+        **Funcionalidad mejorada (v1.1.0+):**
+        - Recalcula automáticamente el estado de la venta asociada
+        - Auto-completa la venta si los pagos aprobados cubren el total
+        - Revierte la venta a PENDIENTE si los pagos ya no cubren el total
+        - Valida que aprobar el pago no cause sobre-pago
+        - Operación transaccional con rollback automático en errores
+      required:
+        - idEstado
+      properties:
+        idEstado:
+          type: integer
+          description: |
+            Nuevo estado del pago:
+            - 1 = APROBADO (pago confirmado, cuenta para completar venta)
+            - 2 = RECHAZADO (pago inválido, no cuenta para completar venta)
+            - 3 = PENDIENTE (pago en verificación, no cuenta para completar venta)
+          minimum: 1
+          maximum: 3
+          example: 1
+    UpdatePagoEstadoDto:
+      deprecated: true
+      type: object
+      description: |
+        ⚠️ **DEPRECADO desde v1.1.0** - Usar `UpdateEstadoDto` con ruta `PATCH /pago/{id}/estado` en su lugar.
+
+        Este schema está obsoleto porque:
+        - La ruta cambió de `PATCH /pago/estado` a `PATCH /pago/{id}/estado`
+        - El ID ahora va en el path (RESTful), no en el body
+        - El nuevo DTO solo requiere `idEstado`
+      required:
+        - idPago
+        - idEstado
+      properties:
+        idPago:
+          type: integer
+          description: "⚠️ DEPRECADO: Ahora el ID va en la ruta como /{id}/estado"
+          minimum: 1
+          example: 42
+        idEstado:
+          type: integer
+          description: Nuevo estado del pago (1=Aprobado, 2=Rechazado, 3=Pendiente)
+          minimum: 1
+          example: 1
+    MetodoPago:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        activo:
+          type: boolean
+    PagoEstado:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+    ResponseDTOPagoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOMetodoPagoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetodoPago"
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOPagoEstadoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PagoEstado"
+        code:
+          type: integer
+        error:
+          type: string

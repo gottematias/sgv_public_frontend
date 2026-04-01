@@ -1,0 +1,798 @@
+# OpenAPI Inventario Module
+# Product management, services, and stock movement endpoints
+
+paths:
+  /producto/create:
+    post:
+      tags:
+        - Stock
+      summary: Crear producto
+      description: |
+        Crea un nuevo producto en el inventario.
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: productoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductoDto"
+      responses:
+        "201":
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/producto/update/{id}":
+    put:
+      tags:
+        - Stock
+      summary: Actualizar producto
+      description: |
+        Actualiza los datos de un producto existente.
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: productoUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductoDto"
+      responses:
+        "200":
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/producto/get/{id}":
+    get:
+      tags:
+        - Stock
+      summary: Obtener producto por ID
+      operationId: productoGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOProducto"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /producto/list:
+    get:
+      tags:
+        - Stock
+      summary: Listar productos
+      operationId: productoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - name: idCategoria
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por categoría
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOProductoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/producto/delete/{id}":
+    delete:
+      tags:
+        - Stock
+      summary: Eliminar producto (soft delete)
+      description: |
+        Elimina lógicamente un producto (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: productoDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Producto eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /producto/categoria/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar categorías de producto
+      operationId: productoCategoriaList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOProductoCategoriaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /producto/reportes/stock-bajo:
+    get:
+      tags:
+        - Stock
+      summary: Obtener productos con stock bajo
+      description: Retorna los productos activos cuyo stock actual es menor o igual al stock mínimo, ordenados por stock actual ascendente
+      operationId: productoReportesStockBajo
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de productos con stock bajo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOProductoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /producto/reportes/proximos-vencer:
+    get:
+      tags:
+        - Stock
+      summary: Obtener productos próximos a vencer
+      description: Retorna los productos activos cuya fecha de vencimiento está dentro de los próximos N días (30 por defecto), ordenados por fecha de vencimiento ascendente
+      operationId: productoReportesProximosVencer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: dias
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+          description: Número de días para el cálculo de vencimiento (default 30)
+      responses:
+        "200":
+          description: Lista de productos próximos a vencer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOProductoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /producto/reportes/valorizacion:
+    get:
+      tags:
+        - Stock
+      summary: Obtener valorización del inventario
+      description: Retorna el valor total del inventario calculado con precios de costo y venta, incluyendo detalle por producto
+      operationId: productoReportesValorizacion
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Valorización del inventario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOValorizacionInventario"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /servicio/create:
+    post:
+      tags:
+        - Stock
+      summary: Crear servicio
+      description: |
+        Crea un nuevo servicio.
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: servicioCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServicioDto"
+      responses:
+        "201":
+          description: Servicio creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/servicio/update/{id}":
+    put:
+      tags:
+        - Stock
+      summary: Actualizar servicio
+      description: |
+        Actualiza los datos de un servicio existente.
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: servicioUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServicioDto"
+      responses:
+        "200":
+          description: Servicio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/servicio/get/{id}":
+    get:
+      tags:
+        - Stock
+      summary: Obtener servicio por ID
+      operationId: servicioGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Servicio encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOServicio"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /servicio/list:
+    get:
+      tags:
+        - Stock
+      summary: Listar servicios
+      operationId: servicioList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de servicios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOServicioArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/servicio/delete/{id}":
+    delete:
+      tags:
+        - Stock
+      summary: Eliminar servicio (soft delete)
+      description: |
+        Elimina lógicamente un servicio (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: servicioDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Servicio eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /stock/movimiento/create:
+    post:
+      tags:
+        - Stock
+      summary: Crear movimiento de stock
+      description: |
+        Crea un nuevo movimiento de stock (entrada o salida).
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), ADMINISTRADOR_SISTEMA (7)
+      operationId: stockMovimientoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMovimientoStockDto"
+      responses:
+        "201":
+          description: Movimiento creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  /stock/movimiento/list:
+    get:
+      tags:
+        - Stock
+      summary: Listar movimientos de stock
+      description: |
+        **Roles requeridos:** GESTOR_INVENTARIO (4), CAJERO (3), ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: stockMovimientoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idProducto
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por producto
+        - name: idMovimientoTipo
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por tipo de movimiento
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Lista de movimientos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMovimientoStockArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/stock/producto/{id}/kardex":
+    get:
+      tags:
+        - Stock
+      summary: Obtener kardex de producto
+      description: |
+        Retorna el historial completo de movimientos de stock de un producto con saldos progresivos.
+
+        **Roles requeridos:** GESTOR_INVENTARIO (4), CAJERO (3), ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: stockProductoKardex
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Kardex del producto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOKardex"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /stock/movimiento/tipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de movimiento de stock
+      description: |
+        **Roles requeridos:** GESTOR_INVENTARIO (4), CAJERO (3), ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: stockMovimientoTipoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de movimiento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMovimientoStockTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    CreateProductoDto:
+      type: object
+      required:
+        - nombre
+        - codigoInterno
+        - precioVenta
+        - precioCosto
+        - stockActual
+        - idCategoria
+      properties:
+        nombre:
+          type: string
+          maxLength: 250
+        descripcion:
+          type: string
+        codigo:
+          type: string
+          maxLength: 100
+        codigoInterno:
+          type: string
+          maxLength: 100
+        precioVenta:
+          type: number
+          minimum: 0
+          description: El precio de venta debe ser mayor o igual a 0
+        precioCosto:
+          type: number
+          minimum: 0
+          description: El precio de costo debe ser mayor o igual a 0
+        fechaVencimiento:
+          type: string
+          format: date-time
+        stockActual:
+          type: integer
+          minimum: 0
+        stockMinimo:
+          type: integer
+          minimum: 0
+        idCategoria:
+          type: integer
+    UpdateProductoDto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 250
+        descripcion:
+          type: string
+        codigo:
+          type: string
+          maxLength: 100
+          description: Código externo o código de barras del producto
+        codigoInterno:
+          type: string
+          maxLength: 100
+          description: Código interno del producto para uso del sistema
+        precioVenta:
+          type: number
+          minimum: 0
+          description: Precio de venta debe ser mayor o igual a 0. Acepta números o strings numéricos (se convierten automáticamente)
+        precioCosto:
+          type: number
+          minimum: 0
+          description: Precio de costo debe ser mayor o igual a 0. Acepta números o strings numéricos (se convierten automáticamente)
+        fechaVencimiento:
+          type: string
+          format: date-time
+        stockMinimo:
+          type: integer
+          minimum: 0
+          description: Stock mínimo debe ser mayor o igual a 0. Acepta números o strings numéricos (se convierten automáticamente)
+        idCategoria:
+          type: integer
+          description: ID de la categoría del producto. Acepta números o strings numéricos (se convierten automáticamente)
+        activo:
+          type: boolean
+    Producto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        codigo:
+          type: string
+        codigoInterno:
+          type: string
+        precioVenta:
+          type: number
+        precioCosto:
+          type: number
+        stockActual:
+          type: integer
+        stockMinimo:
+          type: integer
+        activo:
+          type: boolean
+        categoria:
+          $ref: "#/components/schemas/ProductoCategoria"
+    ProductoCategoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+    ResponseDTOProducto:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Producto"
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOProductoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Producto"
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOProductoCategoriaArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductoCategoria"
+        code:
+          type: integer
+        error:
+          type: string
+    ValorizacionInventario:
+      type: object
+      properties:
+        totalProductos:
+          type: integer
+          description: Cantidad total de productos con stock
+        valorCosto:
+          type: number
+          description: Valor total del inventario a precio de costo
+        valorVenta:
+          type: number
+          description: Valor total del inventario a precio de venta
+        productos:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
+              stockActual:
+                type: integer
+              precioCosto:
+                type: number
+              precioVenta:
+                type: number
+              valorCosto:
+                type: number
+                description: stockActual * precioCosto
+              valorVenta:
+                type: number
+                description: stockActual * precioVenta
+    ResponseDTOValorizacionInventario:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/ValorizacionInventario"
+        code:
+          type: integer
+        error:
+          type: string
+    CreateServicioDto:
+      type: object
+      required:
+        - nombre
+        - codigoInterno
+        - precio
+        - duracionMinutos
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+        codigoInterno:
+          type: string
+          maxLength: 100
+        precio:
+          type: number
+          minimum: 0
+          description: El precio debe ser mayor o igual a 0
+        duracionMinutos:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: La duración debe estar entre 1 y 1440 minutos (24 horas)
+    UpdateServicioDto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+        codigoInterno:
+          type: string
+          maxLength: 100
+          description: Código interno del servicio
+        precio:
+          type: number
+          minimum: 0
+          description: El precio debe ser mayor o igual a 0
+        duracionMinutos:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: La duración debe estar entre 1 y 1440 minutos (24 horas)
+        activo:
+          type: boolean
+    Servicio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        precio:
+          type: number
+        activo:
+          type: boolean
+    ResponseDTOServicio:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Servicio"
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOServicioArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Servicio"
+        code:
+          type: integer
+        error:
+          type: string
+    CreateMovimientoStockDto:
+      type: object
+      required:
+        - cantidad
+        - idProducto
+        - idMovimientoTipo
+        - idEmpleado
+      properties:
+        cantidad:
+          type: integer
+        observaciones:
+          type: string
+        idProducto:
+          type: integer
+        idMovimientoTipo:
+          type: integer
+        idEmpleado:
+          type: integer
+    MovimientoStockTipo:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        factor:
+          type: integer
+    ResponseDTOMovimientoStockArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOMovimientoStockTipoArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovimientoStockTipo"
+        code:
+          type: integer
+        error:
+          type: string
+    ResponseDTOKardex:
+      type: object
+      properties:
+        data:
+          type: object
+        code:
+          type: integer
+        error:
+          type: string

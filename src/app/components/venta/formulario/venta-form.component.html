@@ -1,0 +1,96 @@
+<div class="grid">
+  <div class="col-12">
+    <form [formGroup]="formGroupVenta">
+      <div class="card">
+        <p-stepper [(value)]="currentStepIndex">
+          <p-step-list>
+            <p-step [value]="0">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-shopping-cart"></i>
+                <span class="font-semibold">Items</span>
+              </div>
+            </p-step>
+            <p-step [value]="1">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-money-bill"></i>
+                <span class="font-semibold">Pagos</span>
+              </div>
+            </p-step>
+          </p-step-list>
+
+          <p-step-panels>
+            <p-step-panel [value]="0">
+              <ng-template #content>
+                <app-venta-items
+                  [items]="items"
+                  (itemSeleccionado)="onItemSeleccionado($event)"
+                  (itemRemoved)="onItemRemoved($event)"
+                  (cantidadActualizada)="onCantidadActualizada($event)"
+                />
+
+                <!-- Step Actions -->
+                <div
+                  class="flex justify-content-between gap-2 mt-4 pt-3 border-top-1 surface-border"
+                >
+                  <p-button
+                    label="Cancelar"
+                    severity="secondary"
+                    (onClick)="cerrar()"
+                    [outlined]="true"
+                  />
+                  <p-button
+                    label="Continuar con el pago"
+                    icon="pi pi-arrow-right"
+                    iconPos="right"
+                    (onClick)="avanzarAPagos()"
+                    [disabled]="!puedeAvanzarAPagos()"
+                    pTooltip="Continuar con los pagos"
+                    tooltipPosition="top"
+                  />
+                </div>
+              </ng-template>
+            </p-step-panel>
+
+            <p-step-panel [value]="1">
+              <ng-template #content>
+                <app-venta-pagos
+                  [formGroupVenta]="formGroupVenta"
+                  [pagos]="pagos"
+                  [personas]="personas"
+                  [metodosPago]="metodosPago"
+                  [estadosPago]="estadosPago"
+                  [items]="items"
+                  [total]="getTotal()"
+                  [subtotalItems]="getSubtotalItems()"
+                  (pagoAdded)="onPagoAdded($event)"
+                />
+
+                <!-- Step Actions -->
+                <div
+                  class="flex justify-content-between mt-4 pt-3 border-top-1 surface-border"
+                >
+                  <p-button
+                    label="Volver a Items"
+                    icon="pi pi-arrow-left"
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="volverAItems()"
+                    pTooltip="Volver a editar items"
+                    tooltipPosition="top"
+                  />
+                  <p-button
+                    label="Finalizar Venta"
+                    icon="pi pi-check"
+                    (onClick)="guardarPagos()"
+                    pTooltip="Guardar venta y pagos, y finalizar"
+                    tooltipPosition="top"
+                  />
+                </div>
+              </ng-template>
+            </p-step-panel>
+          </p-step-panels>
+        </p-stepper>
+      </div>
+    </form>
+  </div>
+</div>

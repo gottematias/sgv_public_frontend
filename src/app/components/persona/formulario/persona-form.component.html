@@ -1,0 +1,345 @@
+<form [formGroup]="formGroupPersona" (ngSubmit)="guardar()">
+  <!-- Sección 1: Datos Personales -->
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label for="apellido" class="block mb-2">
+          Apellido <span class="text-red-500">*</span>
+        </label>
+        <input
+          id="apellido"
+          type="text"
+          pInputText
+          formControlName="apellido"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('apellido')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el apellido"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupPersona.get("apellido")?.invalid && formEnviado) {
+          <small class="text-red-500">El apellido es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="nombre" class="block mb-2">
+          Nombre <span class="text-red-500">*</span>
+        </label>
+        <input
+          id="nombre"
+          type="text"
+          pInputText
+          formControlName="nombre"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('nombre')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el nombre"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupPersona.get("nombre")?.invalid && formEnviado) {
+          <small class="text-red-500">El nombre es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="documentoTipo" class="block mb-2">
+          Tipo de Documento <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="documentoTipo"
+          formControlName="documentoTipo"
+          [options]="documentoTipos"
+          optionLabel="nombre"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          [class.ng-invalid]="
+            formGroupPersona.get('documentoTipo')?.invalid && formEnviado
+          "
+          pTooltip="Seleccione el tipo de documento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-tipo pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ tipo.nombre }}</div>
+              @if (tipo.descripcion) {
+                <div class="text-sm text-gray-600">{{ tipo.descripcion }}</div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+        @if (formGroupPersona.get("documentoTipo")?.invalid && formEnviado) {
+          <small class="text-red-500">El tipo de documento es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="documento" class="block mb-2">
+          Documento <span class="text-red-500">*</span>
+        </label>
+        <input
+          id="documento"
+          type="text"
+          pInputText
+          formControlName="documento"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('documento')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el documento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupPersona.get("documento")?.invalid && formEnviado) {
+          <small class="text-red-500">El documento es requerido</small>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 2: Dirección -->
+  <p-divider type="solid"></p-divider>
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label for="ciudad" class="block mb-2">Ciudad</label>
+        <p-select
+          id="ciudad"
+          formControlName="ciudad"
+          [options]="ciudades"
+          optionLabel="nombre"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          pTooltip="Seleccione la ciudad"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-ciudad pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ ciudad.nombre }}</div>
+              <div class="text-sm text-gray-600">
+                CP: {{ ciudad.codigoPostal }}, {{ ciudad.provincia.nombre }}
+              </div>
+            </div>
+          </ng-template>
+          <ng-template let-ciudad pTemplate="selectedItem">
+            {{ ciudad.nombre }}
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="calle" class="block mb-2">Calle</label>
+        <input
+          id="calle"
+          type="text"
+          pInputText
+          formControlName="calle"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('calle')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese la calle"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="numero" class="block mb-2">Número</label>
+        <input
+          id="numero"
+          type="text"
+          pInputText
+          formControlName="numero"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('numero')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el número"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="piso" class="block mb-2">Piso</label>
+        <input
+          id="piso"
+          type="text"
+          pInputText
+          formControlName="piso"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('piso')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el piso"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="departamento" class="block mb-2">Departamento</label>
+        <input
+          id="departamento"
+          type="text"
+          pInputText
+          formControlName="departamento"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('departamento')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el departamento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+
+      <div class="col-12">
+        <label for="observaciones" class="block mb-2">Observaciones</label>
+        <input
+          id="observaciones"
+          type="text"
+          pInputText
+          formControlName="observaciones"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupPersona.get('observaciones')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese observaciones de la dirección"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 3: Contacto -->
+  <p-divider type="solid"></p-divider>
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12">
+        <label for="contactoTipo" class="block mb-2">Agregar Contacto</label>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-4 mb-2 md:mb-0">
+            <p-select
+              id="contactoTipo"
+              [(ngModel)]="contactoTipoSeleccionado"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="contactoTipos"
+              optionLabel="nombre"
+              class="w-full"
+              appendTo="body"
+              pTooltip="Seleccione el tipo"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            >
+              <ng-template let-tipo pTemplate="item">
+                <div>
+                  <div class="font-semibold">{{ tipo.nombre }}</div>
+                  @if (tipo.descripcion) {
+                    <div class="text-sm text-gray-600">
+                      {{ tipo.descripcion }}
+                    </div>
+                  }
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+          <div class="col-10 md:col-6">
+            <input
+              id="contactoValor"
+              type="text"
+              pInputText
+              [(ngModel)]="contactoValor"
+              [ngModelOptions]="{ standalone: true }"
+              class="w-full"
+              pTooltip="Ingrese el valor"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [life]="4000"
+            />
+          </div>
+          <div class="col-2 md:col-2 flex justify-content-center">
+            <p-button
+              icon="pi pi-plus"
+              (onClick)="agregarContacto()"
+              [disabled]="!contactoTipoSeleccionado || !contactoValor.trim()"
+              styleClass="h-full"
+            />
+          </div>
+        </div>
+
+        @if (contactosAgregados.length > 0) {
+          <div class="mt-3">
+            <div class="block mb-2 font-semibold">Contactos Agregados</div>
+            <div class="flex flex-column gap-2">
+              <div
+                *ngFor="let contacto of contactosAgregados; let i = index"
+                class="flex align-items-center gap-2 p-2 surface-50 border-round contacto-item"
+              >
+                <span class="font-semibold">{{ contacto.tipo.nombre }}:</span>
+                <span class="flex-1">{{ contacto.valor }}</span>
+                <p-button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  (onClick)="eliminarContacto(i)"
+                />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 4: Estado -->
+  @if (personaId && puedeToggleActivo) {
+    <p-divider type="solid"></p-divider>
+    <div class="mb-4">
+      <div class="grid">
+        <div class="col-12">
+          <div class="flex align-items-center">
+            <p-checkbox
+              id="activo"
+              formControlName="activo"
+              [binary]="true"
+              inputType="checkbox"
+            />
+            <label for="activo" class="ml-2">Persona activa</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex justify-content-between gap-2 mt-4">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button label="Guardar" (onClick)="guardar()" />
+  </div>
+</form>

@@ -1,0 +1,169 @@
+<form [formGroup]="formGroupMovimiento" (ngSubmit)="guardar()">
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12">
+        <label for="producto" class="block mb-2">
+          Producto <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="producto"
+          formControlName="producto"
+          [options]="productos"
+          optionLabel="nombre"
+          [filter]="true"
+          filterBy="nombre,codigoInterno"
+          placeholder="Seleccione un producto"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          [class.ng-invalid]="
+            formGroupMovimiento.get('producto')?.invalid && formEnviado
+          "
+          pTooltip="Seleccione el producto para el movimiento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-producto pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ producto.nombre }}</div>
+              <div class="text-sm text-gray-600">
+                Código: {{ producto.codigoInterno }} | Stock actual:
+                {{ producto.stockActual }}
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+        @if (formGroupMovimiento.get("producto")?.invalid && formEnviado) {
+          <small class="text-red-500">El producto es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="tipoMovimiento" class="block mb-2">
+          Tipo de Movimiento <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="tipoMovimiento"
+          formControlName="tipoMovimiento"
+          [options]="tiposMovimiento"
+          optionLabel="nombre"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          [class.ng-invalid]="
+            formGroupMovimiento.get('tipoMovimiento')?.invalid && formEnviado
+          "
+          pTooltip="Seleccione el tipo de movimiento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-tipo pTemplate="item">
+            <div>
+              <span
+                [class]="
+                  tipo.factor === 1
+                    ? 'pi pi-arrow-up text-green-500 mr-2'
+                    : 'pi pi-arrow-down text-red-500 mr-2'
+                "
+              ></span>
+              <span class="font-semibold">{{ tipo.nombre }}</span>
+              @if (tipo.descripcion) {
+                <div class="text-sm text-gray-600 ml-4">
+                  {{ tipo.descripcion }}
+                </div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+        @if (
+          formGroupMovimiento.get("tipoMovimiento")?.invalid && formEnviado
+        ) {
+          <small class="text-red-500">El tipo de movimiento es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="cantidad" class="block mb-2">
+          Cantidad <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="cantidad"
+          formControlName="cantidad"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [min]="1"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupMovimiento.get('cantidad')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese la cantidad del movimiento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupMovimiento.get("cantidad")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >La cantidad es requerida y debe ser mayor a 0</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="fecha" class="block mb-2">
+          Fecha <span class="text-red-500">*</span>
+        </label>
+        <p-datepicker
+          inputId="fecha"
+          formControlName="fecha"
+          [showIcon]="true"
+          iconDisplay="input"
+          dateFormat="dd/mm/yy"
+          [showTime]="true"
+          hourFormat="24"
+          appendTo="body"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          [class.ng-invalid]="
+            formGroupMovimiento.get('fecha')?.invalid && formEnviado
+          "
+          pTooltip="Seleccione la fecha del movimiento"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupMovimiento.get("fecha")?.invalid && formEnviado) {
+          <small class="text-red-500">La fecha es requerida</small>
+        }
+      </div>
+
+      <div class="col-12">
+        <label for="observaciones" class="block mb-2"> Observaciones </label>
+        <textarea
+          id="observaciones"
+          pTextarea
+          formControlName="observaciones"
+          class="w-full"
+          rows="3"
+          pTooltip="Ingrese observaciones sobre el movimiento (opcional)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-content-end gap-2">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cerrar()"
+      [outlined]="true"
+    />
+    <p-button label="Guardar" type="submit" />
+  </div>
+</form>

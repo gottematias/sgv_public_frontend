@@ -1,0 +1,402 @@
+openapi: 3.0.3
+info:
+  title: SGV - Sistema de Gestión Veterinaria API
+  version: 1.0.0
+  description: >
+    API REST para gestión de clínica veterinaria.
+
+
+    ## Autenticación
+
+    La API utiliza JWT Bearer Token. Obtener token via POST /auth/login
+
+    e incluirlo en el header: `Authorization: Bearer {token}`
+
+
+    **Contenido del JWT:**
+
+    El token contiene un payload firmado con información del usuario autenticado:
+
+    - `usuario_id`: ID del usuario
+
+    - `usuario_nombre`: Nombre de usuario (username)
+
+    - `persona_id`: ID de la persona asociada
+
+    - `persona_nombre`: Nombres de la persona
+
+    - `persona_apellido`: Apellidos de la persona
+
+    - `rol_id`: Array de IDs de roles asignados
+
+
+    Esta información permite al frontend mostrar datos del usuario y gestionar
+
+    permisos sin consultas adicionales al backend. Ver schema `JwtPayload` para
+
+    detalles completos.
+
+
+    ## Rate Limiting
+
+    La API implementa límites de tasa para prevenir abuso:
+
+    - **Global**: 100 requests por 60 segundos por dirección IP
+
+    - **Login**: 5 requests por 60 segundos por dirección IP (prevención de
+    fuerza bruta)
+
+    - Cuando se excede el límite, se retorna HTTP 429 (Too Many Requests)
+
+    - Los límites son configurables via variables de entorno (THROTTLE_TTL,
+    THROTTLE_LIMIT, THROTTLE_LOGIN_LIMIT)
+
+
+    ## Formato de Respuesta
+
+    Todas las respuestas usan el wrapper ResponseDTO:
+
+    ```json
+
+    {
+      "data": any,
+      "code": 0,
+      "error": ""
+    }
+
+    ```
+
+
+    ## Mensajes de Error
+
+    Todos los mensajes de error se devuelven en **español** para mejorar la
+    experiencia del usuario:
+
+    - Los errores técnicos se traducen automáticamente a mensajes amigables
+
+    - Los mensajes específicos de entidades se generalizan (ej: "Persona con ID
+    5 no encontrado" → "Recurso no encontrado")
+
+    - Los logs del backend mantienen información técnica detallada para
+    debugging
+  contact:
+    name: SGV Team
+servers:
+  - url: "http://localhost:3000"
+    description: Servidor de desarrollo
+tags:
+  - name: Health
+    description: Estado del servidor
+  - name: Auth
+    description: Autenticación y tokens JWT
+  - name: Persona
+    description: Gestión de clientes/personas
+  - name: Usuario
+    description: Gestión de usuarios del sistema
+  - name: Empleado
+    description: Gestión de empleados
+  - name: Mascota
+    description: Gestión de mascotas
+  - name: HistorialClinico
+    description: Historiales clínicos y consultas
+  - name: Vacuna
+    description: Registro de vacunaciones
+  - name: Turno
+    description: Gestión de citas/turnos
+  - name: Adjunto
+    description: Gestión de archivos adjuntos
+  - name: Stock
+    description: Gestión de inventario, productos y servicios
+  - name: Venta
+    description: Gestión de ventas y pagos
+  - name: Catalogos
+    description: Datos maestros y catálogos
+  - name: Reporte
+    description: Reportes e indicadores de negocio (BI)
+  - name: Backup
+    description: Backup y restauración de base de datos — manual y programado (solo ADMINISTRADOR_SISTEMA)
+
+paths:
+  # ========================================
+  # Health Module (1 path)
+  # ========================================
+  /health:
+    $ref: "./modules/openapi-health.yaml#/paths/~1health"
+
+  # ========================================
+  # Auth Module (2 paths)
+  # ========================================
+  /auth/login:
+    $ref: "./modules/openapi-auth.yaml#/paths/~1auth~1login"
+  /auth/refreshtoken:
+    $ref: "./modules/openapi-auth.yaml#/paths/~1auth~1refreshtoken"
+
+  # ========================================
+  # Persona Module (8 paths)
+  # ========================================
+  /persona/create:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1create"
+  /persona/update/{id}:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1update~1{id}"
+  /persona/get/{id}:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1get~1{id}"
+  /persona/list:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1list"
+  /persona/delete/{id}:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1delete~1{id}"
+  /persona/documentotipo/list:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1persona~1documentotipo~1list"
+  /contacto/listcontactotipo:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1contacto~1listcontactotipo"
+  /direccion/listciudades:
+    $ref: "./modules/openapi-persona.yaml#/paths/~1direccion~1listciudades"
+
+  # ========================================
+  # Usuario Module (7 paths)
+  # ========================================
+  /usuario/create:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1create"
+  /usuario/update/{id}:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1update~1{id}"
+  /usuario/get/{id}:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1get~1{id}"
+  /usuario/list:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1list"
+  /usuario/roles/list:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1roles~1list"
+  /usuario/change-password:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1change-password"
+  /usuario/delete/{id}:
+    $ref: "./modules/openapi-usuario.yaml#/paths/~1usuario~1delete~1{id}"
+
+  # ========================================
+  # Empleado Module (9 paths)
+  # ========================================
+  /empleado/create:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1create"
+  /empleado/update/{id}:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1update~1{id}"
+  /empleado/get/{id}:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1get~1{id}"
+  /empleado/list:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1list"
+  /empleado/veterinarios:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1veterinarios"
+  /empleado/delete/{id}:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1delete~1{id}"
+  /empleado/puesto/list:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1puesto~1list"
+  /empleado/atributo-tipo/list:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1atributo-tipo~1list"
+  /empleado/especialidad/list:
+    $ref: "./modules/openapi-empleado.yaml#/paths/~1empleado~1especialidad~1list"
+
+  # ========================================
+  # Mascota Module (11 paths)
+  # ========================================
+  /mascota/create:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1create"
+  /mascota/update/{id}:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1update~1{id}"
+  /mascota/get/{id}:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1get~1{id}"
+  /mascota/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1list"
+  /mascota/estado/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1estado~1list"
+  /mascota/delete/{id}:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1delete~1{id}"
+  /mascota/{id}/imagen-perfil:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1mascota~1{id}~1imagen-perfil"
+  /especie/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1especie~1list"
+  /especie/raza/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1especie~1raza~1list"
+  /alergia/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1alergia~1list"
+  /alergia/condicioncronica/list:
+    $ref: "./modules/openapi-mascota.yaml#/paths/~1alergia~1condicioncronica~1list"
+
+  # ========================================
+  # Historial Clinico Module (6 paths)
+  # ========================================
+  /historial-clinico/create:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1historial-clinico~1create"
+  /historial-clinico/update/{id}:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1historial-clinico~1update~1{id}"
+  /historial-clinico/get/{id}:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1historial-clinico~1get~1{id}"
+  /historial-clinico/list:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1historial-clinico~1list"
+  /historial-clinico/delete/{id}:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1historial-clinico~1delete~1{id}"
+  /diagnostico/list:
+    $ref: "./modules/openapi-clinica.yaml#/paths/~1diagnostico~1list"
+
+  # ========================================
+  # Vacuna Module (6 paths)
+  # ========================================
+  /vacuna/create:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1create"
+  /vacuna/update/{id}:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1update~1{id}"
+  /vacuna/get/{id}:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1get~1{id}"
+  /vacuna/list:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1list"
+  /vacuna/delete/{id}:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1delete~1{id}"
+  /vacuna/tipo/list:
+    $ref: "./modules/openapi-vacuna.yaml#/paths/~1vacuna~1tipo~1list"
+
+  # ========================================
+  # Turno Module (8 paths)
+  # ========================================
+  /turno/create:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1create"
+  /turno/update/{id}:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1update~1{id}"
+  /turno/get/{id}:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1get~1{id}"
+  /turno/list:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1list"
+  /turno/disponibles:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1disponibles"
+  /turno/delete/{id}:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1delete~1{id}"
+  /turno/tipo/list:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1tipo~1list"
+  /turno/estado/list:
+    $ref: "./modules/openapi-turno.yaml#/paths/~1turno~1estado~1list"
+
+  # ========================================
+  # Adjunto Module (9 paths)
+  # ========================================
+  /adjunto/upload:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1upload"
+  /adjunto/download/{id}:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1download~1{id}"
+  /adjunto/view/{id}:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1view~1{id}"
+  /adjunto/update/{id}:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1update~1{id}"
+  /adjunto/get/{id}:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1get~1{id}"
+  /adjunto/list:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1list"
+  /adjunto/delete/{id}:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1delete~1{id}"
+  /adjunto/tipo/list:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1tipo~1list"
+  /adjunto/referencia/list:
+    $ref: "./modules/openapi-adjunto.yaml#/paths/~1adjunto~1referencia~1list"
+
+  # ========================================
+  # Inventario/Stock Module (18 paths)
+  # ========================================
+  /producto/create:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1create"
+  /producto/update/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1update~1{id}"
+  /producto/get/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1get~1{id}"
+  /producto/list:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1list"
+  /producto/delete/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1delete~1{id}"
+  /producto/categoria/list:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1categoria~1list"
+  /producto/reportes/stock-bajo:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1reportes~1stock-bajo"
+  /producto/reportes/proximos-vencer:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1reportes~1proximos-vencer"
+  /producto/reportes/valorizacion:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1producto~1reportes~1valorizacion"
+  /servicio/create:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1servicio~1create"
+  /servicio/update/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1servicio~1update~1{id}"
+  /servicio/get/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1servicio~1get~1{id}"
+  /servicio/list:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1servicio~1list"
+  /servicio/delete/{id}:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1servicio~1delete~1{id}"
+  /stock/movimiento/create:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1stock~1movimiento~1create"
+  /stock/movimiento/list:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1stock~1movimiento~1list"
+  /stock/producto/{id}/kardex:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1stock~1producto~1{id}~1kardex"
+  /stock/movimiento/tipo/list:
+    $ref: "./modules/openapi-inventario.yaml#/paths/~1stock~1movimiento~1tipo~1list"
+
+  # ========================================
+  # Venta Module (12 paths)
+  # ========================================
+  /venta/create:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1create"
+  /venta/update/{id}:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1update~1{id}"
+  /venta/get/{id}:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1get~1{id}"
+  /venta/list:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1list"
+  /venta/anular/{id}:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1anular~1{id}"
+  /venta/estado/list:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1estado~1list"
+  /venta/anulacion/motivo/list:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1venta~1anulacion~1motivo~1list"
+  /pago/create:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1pago~1create"
+  /pago/{id}/estado:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1pago~1{id}~1estado"
+  /pago/list:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1pago~1list"
+  /pago/metodo/list:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1pago~1metodo~1list"
+  /pago/estados:
+    $ref: "./modules/openapi-venta.yaml#/paths/~1pago~1estados"
+
+  # ========================================
+  # Backup Module (6 paths)
+  # ========================================
+  /backup:
+    $ref: "./modules/openapi-backup.yaml#/paths/~1backup"
+  /backup/restore:
+    $ref: "./modules/openapi-backup.yaml#/paths/~1backup~1restore"
+  /backup/programados:
+    $ref: "./modules/openapi-backup.yaml#/paths/~1backup~1programados"
+  /backup/programados/{nombre}:
+    $ref: "./modules/openapi-backup.yaml#/paths/~1backup~1programados~1{nombre}"
+  /backup/programados/{nombre}/restaurar:
+    $ref: "./modules/openapi-backup.yaml#/paths/~1backup~1programados~1{nombre}~1restaurar"
+
+  # ========================================
+  # Reporte Module (10 paths)
+  # ========================================
+  /reporte/turnos:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1turnos"
+  /reporte/turnos/export:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1turnos~1export"
+  /reporte/historiales-clinicos:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1historiales-clinicos"
+  /reporte/historiales-clinicos/export:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1historiales-clinicos~1export"
+  /reporte/productos-mas-vendidos:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1productos-mas-vendidos"
+  /reporte/productos-mas-vendidos/export:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1productos-mas-vendidos~1export"
+  /reporte/ganancias:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1ganancias"
+  /reporte/ganancias/export:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1ganancias~1export"
+  /reporte/stock-bajo:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1stock-bajo"
+  /reporte/stock-bajo/export:
+    $ref: "./modules/openapi-reporte.yaml#/paths/~1reporte~1stock-bajo~1export"
+
+components:
+  # Reference all shared components (schemas, security schemes, parameters, responses)
+  $ref: "./openapi-shared.yaml#/components"

@@ -1,0 +1,55 @@
+<div>
+  <p-menubar [model]="items">
+    <ng-template pTemplate="start"></ng-template>
+    <ng-template pTemplate="item" let-item let-root="root">
+      <a pRipple class="flex align-items-center p-menuitem-link">
+        <span [class]="item.icon"></span>
+        <span class="ml-2">{{ item.label }}</span>
+        <span
+          *ngIf="item.shortcut"
+          class="ml-auto border-1 surface-border border-round surface-100 text-xs p-1"
+          >{{ item.shortcut }}</span
+        >
+      </a>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex align-items-center" *ngIf="isAuthenticated">
+        <p-button
+          [text]="true"
+          [plain]="true"
+          (click)="toggleUserMenu($event)"
+          class="user-profile-button"
+          [attr.aria-label]="'Perfil de ' + usuarioNombreCompleto"
+          pTooltip="Menú de usuario"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        >
+          <div class="flex align-items-center gap-2">
+            <p-avatar
+              [label]="usuarioIniciales"
+              shape="circle"
+              size="normal"
+              styleClass="user-avatar"
+            />
+            <span class="hidden md:inline text-sm font-medium">{{
+              usuarioNombre
+            }}</span>
+            <i class="pi pi-chevron-down text-sm"></i>
+          </div>
+        </p-button>
+        <p-menu
+          #userMenu
+          [model]="userMenuItems"
+          [popup]="true"
+          appendTo="body"
+        >
+          <ng-template pTemplate="start">
+            <div class="user-info-header">
+              <div class="user-info-name">{{ usuarioNombreCompleto }}</div>
+            </div>
+          </ng-template>
+        </p-menu>
+      </div>
+    </ng-template>
+  </p-menubar>
+</div>

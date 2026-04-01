@@ -1,0 +1,551 @@
+# OpenAPI Turno Module
+# This file contains all Turno-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Turno Module
+  version: 1.0.0
+  description: Módulo de gestión de turnos y citas
+
+paths:
+  /turno/create:
+    post:
+      tags:
+        - Turno
+      summary: Crear turno
+      description: |
+        Crea un nuevo turno/cita.
+
+        **Roles requeridos:** RECEPCIONISTA (2), VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: turnoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTurnoDto"
+      responses:
+        "201":
+          description: Turno creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/turno/update/{id}":
+    put:
+      tags:
+        - Turno
+      summary: Actualizar turno
+      description: |
+        Actualiza los datos de un turno/cita existente.
+
+        **Roles requeridos:** RECEPCIONISTA (2), VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: turnoUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTurnoDto"
+      responses:
+        "200":
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/turno/get/{id}":
+    get:
+      tags:
+        - Turno
+      summary: Obtener turno por ID
+      operationId: turnoGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Turno encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOTurno"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /turno/list:
+    get:
+      tags:
+        - Turno
+      summary: Listar turnos
+      operationId: turnoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idMascota
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por mascota
+        - name: idEmpleadoAsignado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por veterinario
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango
+        - name: idTurnoEstado
+          in: query
+          schema:
+            type: string
+          description: 'Filtrar por estados (CSV de IDs, ej: "1,2,3")'
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de turnos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOTurnoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /turno/disponibles:
+    get:
+      tags:
+        - Turno
+      summary: Obtener horarios disponibles
+      operationId: turnoDisponibles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fechaDesde
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio
+        - name: fechaHasta
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin
+        - name: idEmpleadoAsignado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por veterinario
+        - name: duracionMinutos
+          in: query
+          schema:
+            type: integer
+            default: 30
+          description: Duración del turno
+      responses:
+        "200":
+          description: Slots disponibles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOTurnoDisponibleArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/turno/delete/{id}":
+    delete:
+      tags:
+        - Turno
+      summary: Eliminar turno (soft delete)
+      description: |
+        Elimina lógicamente un turno/cita (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: turnoDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Turno eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /turno/tipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de turno
+      operationId: turnoTipoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de turno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOTurnoTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /turno/estado/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar estados de turno
+      operationId: turnoEstadoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de estados de turno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOTurnoEstadoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      $ref: "../openapi-shared.yaml#/components/securitySchemes/BearerAuth"
+
+  schemas:
+    TurnoTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOTurnoTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TurnoTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    TurnoEstado:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOTurnoEstadoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TurnoEstado"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Turno:
+      type: object
+      required:
+        - id
+        - fechaHora
+        - duracionMinutos
+        - idTurnoTipo
+        - idTurnoEstado
+        - idUsuarioRegistro
+        - idEmpleadoAsignado
+        - idMascota
+        - activo
+      properties:
+        id:
+          type: integer
+        fechaHora:
+          type: string
+          format: date-time
+        duracionMinutos:
+          type: integer
+        motivo:
+          type: string
+          maxLength: 100
+          nullable: true
+        notas:
+          type: string
+          nullable: true
+        idTurnoTipo:
+          type: integer
+        idTurnoEstado:
+          type: integer
+        idUsuarioRegistro:
+          type: integer
+        idEmpleadoAsignado:
+          type: integer
+        idMascota:
+          type: integer
+        activo:
+          type: boolean
+        turnoTipo:
+          $ref: "#/components/schemas/TurnoTipo"
+        turnoEstado:
+          $ref: "#/components/schemas/TurnoEstado"
+        usuarioRegistro:
+          $ref: "#/components/schemas/Usuario"
+        empleadoAsignado:
+          $ref: "#/components/schemas/Empleado"
+        mascota:
+          $ref: "#/components/schemas/Mascota"
+    SlotDisponible:
+      type: object
+      description: Bloque horario disponible para agendar un turno
+      required:
+        - fecha
+        - fechaHoraInicio
+        - fechaHoraFin
+        - duracionMinutos
+      properties:
+        fecha:
+          type: string
+          format: date
+          description: Fecha del slot (YYYY-MM-DD)
+          example: "2026-01-20"
+        fechaHoraInicio:
+          type: string
+          format: date-time
+          description: Fecha y hora de inicio del slot
+          example: "2026-01-20T08:00:00.000Z"
+        fechaHoraFin:
+          type: string
+          format: date-time
+          description: Fecha y hora de fin del slot
+          example: "2026-01-20T08:30:00.000Z"
+        duracionMinutos:
+          type: integer
+          description: Duración del slot en minutos
+          example: 30
+    EmpleadoVeterinarioResumen:
+      type: object
+      description: Resumen del empleado veterinario con su usuario
+      required:
+        - id
+        - usuario
+      properties:
+        id:
+          type: integer
+          description: ID del empleado
+          example: 1
+        usuario:
+          $ref: "#/components/schemas/Usuario"
+    TurnoDisponible:
+      type: object
+      description: Disponibilidad de turnos agrupada por veterinario
+      required:
+        - empleadoAsignado
+        - slotsDisponibles
+      properties:
+        empleadoAsignado:
+          $ref: "#/components/schemas/EmpleadoVeterinarioResumen"
+        slotsDisponibles:
+          type: array
+          description: Lista de slots horarios disponibles para este veterinario
+          items:
+            $ref: "#/components/schemas/SlotDisponible"
+    CreateTurnoDto:
+      type: object
+      required:
+        - fechaHora
+        - duracionMinutos
+        - idTurnoTipo
+        - idTurnoEstado
+        - idEmpleadoAsignado
+        - idMascota
+      properties:
+        fechaHora:
+          type: string
+          format: date-time
+          example: "2026-01-20T15:00:00Z"
+        duracionMinutos:
+          type: integer
+          minimum: 15
+          example: 30
+        motivo:
+          type: string
+          maxLength: 100
+          example: Consulta general
+        notas:
+          type: string
+          example: Turno para chequeo
+        idTurnoTipo:
+          type: integer
+          example: 1
+        idTurnoEstado:
+          type: integer
+          example: 1
+        idEmpleadoAsignado:
+          type: integer
+          example: 1
+        idMascota:
+          type: integer
+          example: 1
+    UpdateTurnoDto:
+      type: object
+      properties:
+        fechaHora:
+          type: string
+          format: date-time
+        duracionMinutos:
+          type: integer
+          minimum: 15
+        motivo:
+          type: string
+          maxLength: 100
+        notas:
+          type: string
+        idTurnoTipo:
+          type: integer
+        idTurnoEstado:
+          type: integer
+        idEmpleadoAsignado:
+          type: integer
+        idMascota:
+          type: integer
+        activo:
+          type: boolean
+    ResponseDTOTurno:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Turno"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOTurnoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Turno"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOTurnoDisponibleArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TurnoDisponible"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    # Cross-module references
+    Usuario:
+      description: "Usuario entity - See openapi-usuario.yaml for full definition"
+      type: object
+      properties:
+        id:
+          type: integer
+    Empleado:
+      description: "Empleado entity - See openapi.yaml#/components/schemas/Empleado for full definition"
+      type: object
+      properties:
+        id:
+          type: integer
+    Mascota:
+      description: "Mascota entity - See openapi.yaml#/components/schemas/Mascota for full definition"
+      type: object
+      properties:
+        id:
+          type: integer

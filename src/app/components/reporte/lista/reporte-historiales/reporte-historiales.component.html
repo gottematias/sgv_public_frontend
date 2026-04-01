@@ -1,0 +1,199 @@
+<div class="flex flex-column h-full gap-2">
+  <div class="flex p-2 gap-3 flex-wrap align-items-center">
+    <p-datepicker
+      [(ngModel)]="fechaDesde"
+      [maxDate]="fechaHasta"
+      (onSelect)="onFechaDesdeChange()"
+      (onClear)="onFechaDesdeChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Fecha desde"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha inicio del rango de consultas"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-datepicker
+      [(ngModel)]="fechaHasta"
+      [minDate]="fechaDesde"
+      (onSelect)="onFechaHastaChange()"
+      (onClear)="onFechaHastaChange()"
+      [showIcon]="true"
+      [showClear]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Fecha hasta"
+      [style]="{ width: '180px' }"
+      pTooltip="Fecha fin del rango de consultas"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-datepicker>
+
+    <p-select
+      [options]="veterinarios"
+      [(ngModel)]="idEmpleado"
+      optionValue="id"
+      [showClear]="true"
+      [filter]="true"
+      placeholder="Filtrar por veterinario"
+      [style]="{ width: '240px' }"
+      pTooltip="Filtrar por veterinario que atendió"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    >
+      <ng-template let-vet pTemplate="item">
+        {{ getVeterinarioLabel(vet) }}
+      </ng-template>
+      <ng-template let-vet pTemplate="selectedItem">
+        {{ getVeterinarioLabel(vet) }}
+      </ng-template>
+    </p-select>
+
+    <p-select
+      [options]="mascotas"
+      [(ngModel)]="idMascota"
+      optionLabel="nombre"
+      optionValue="id"
+      [showClear]="true"
+      [filter]="true"
+      placeholder="Filtrar por mascota"
+      [style]="{ width: '200px' }"
+      pTooltip="Filtrar por mascota"
+      tooltipPosition="bottom"
+      [tooltipOptions]="{ life: 3000 }"
+    ></p-select>
+
+    <div class="flex-1"></div>
+
+    <div class="flex gap-2">
+      <p-button
+        label="Generar Reporte"
+        icon="pi pi-search"
+        (onClick)="generarReporte()"
+        pTooltip="Consultar historiales con los filtros aplicados"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+      <p-button
+        icon="pi pi-file-excel"
+        severity="success"
+        [disabled]="listaHistoriales.length === 0"
+        (onClick)="exportar('xlsx')"
+        pTooltip="Exportar a Excel (XLSX)"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+      />
+      <p-button
+        icon="pi pi-download"
+        severity="success"
+        [disabled]="listaHistoriales.length === 0"
+        (onClick)="exportar('csv')"
+        pTooltip="Exportar a CSV"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+        styleClass="h-full"
+        [style]="{ 'aspect-ratio': '1' }"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="flex justify-content-center p-4">
+      <p-progressspinner [style]="{ width: '50px', height: '50px' }" />
+    </div>
+  }
+
+  <div #tableContainer class="table-container">
+    <p-table
+      [value]="listaHistoriales"
+      styleClass="p-datatable-striped"
+      [scrollable]="true"
+      [scrollHeight]="tableScrollHeight"
+      [tableStyle]="{ 'min-width': '80rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Fecha Consulta</th>
+          <th scope="col">Mascota</th>
+          <th scope="col">Especie / Raza</th>
+          <th scope="col">Cliente</th>
+          <th scope="col">Veterinario</th>
+          <th scope="col">Diagnósticos</th>
+          <th scope="col">Peso (kg)</th>
+          <th scope="col">Temp. (°C)</th>
+          <th scope="col">Motivo</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>{{ formatFecha(item.fechaConsulta) }}</td>
+          <td>{{ item.mascotaNombre }}</td>
+          <td>{{ item.mascotaEspecie }} / {{ item.mascotaRaza }}</td>
+          <td>{{ item.clienteNombre }}</td>
+          <td>{{ item.empleadoNombre }}</td>
+          <td>
+            <span
+              [pTooltip]="item.diagnosticos?.join(', ')"
+              tooltipPosition="top"
+              [life]="5000"
+            >
+              {{
+                item.diagnosticos && item.diagnosticos.length > 0
+                  ? item.diagnosticos.length > 2
+                    ? item.diagnosticos.slice(0, 2).join(", ") + "..."
+                    : item.diagnosticos.join(", ")
+                  : "-"
+              }}
+            </span>
+          </td>
+          <td>
+            {{
+              item.examenFisico?.peso !== null &&
+              item.examenFisico?.peso !== undefined
+                ? (item.examenFisico.peso | number: "1.1-2")
+                : "-"
+            }}
+          </td>
+          <td>
+            {{
+              item.examenFisico?.temperatura !== null &&
+              item.examenFisico?.temperatura !== undefined
+                ? (item.examenFisico.temperatura | number: "1.1-1")
+                : "-"
+            }}
+          </td>
+          <td>
+            <span
+              [pTooltip]="item.motivoConsulta"
+              tooltipPosition="top"
+              [life]="5000"
+            >
+              {{
+                item.motivoConsulta && item.motivoConsulta.length > 40
+                  ? (item.motivoConsulta | slice: 0 : 40) + "..."
+                  : item.motivoConsulta || "-"
+              }}
+            </span>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            @if (!hasQueried) {
+              <span class="text-color-secondary">
+                <i class="pi pi-info-circle mr-2"></i>
+                Aplique los filtros y presione "Generar Reporte"
+              </span>
+            } @else {
+              No se encontraron historiales para los filtros seleccionados.
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

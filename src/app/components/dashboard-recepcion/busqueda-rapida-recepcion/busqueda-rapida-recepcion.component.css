@@ -1,0 +1,31 @@
+/* Estilos para el autoComplete */
+::ng-deep p-autoComplete {
+  width: 100%;
+}
+
+::ng-deep p-autoComplete .p-autocomplete {
+  width: 100%;
+}
+
+::ng-deep p-autoComplete .p-autocomplete-input {
+  width: 100%;
+}
+
+/* Estilos para mejorar la apariencia del dropdown del autoComplete */
+::ng-deep .p-autocomplete-overlay .p-autocomplete-list-container {
+  max-height: 400px;
+}
+
+::ng-deep .p-autocomplete-overlay .p-autocomplete-option:hover {
+  background-color: var(--surface-hover);
+  cursor: pointer;
+}
+
+::ng-deep .p-autocomplete-overlay .p-autocomplete-option {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+::ng-deep .p-autocomplete-overlay .p-autocomplete-option:last-child {
+  border-bottom: none;
+}

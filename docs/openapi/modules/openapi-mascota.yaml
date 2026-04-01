@@ -1,0 +1,748 @@
+# OpenAPI Mascota Module
+# This file contains all Mascota-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Mascota Module
+  version: 1.0.0
+  description: Módulo de gestión de mascotas, especies, razas, alergias y condiciones crónicas
+
+paths:
+  /mascota/create:
+    post:
+      tags:
+        - Mascota
+      summary: Crear mascota
+      description: |
+        Crea una nueva mascota (paciente).
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+      operationId: mascotaCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMascotaDto"
+      responses:
+        "201":
+          description: Mascota creada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/mascota/update/{id}":
+    put:
+      tags:
+        - Mascota
+      summary: Actualizar mascota
+      description: |
+        Actualiza los datos de una mascota existente.
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+      operationId: mascotaUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMascotaDto"
+      responses:
+        "200":
+          description: Mascota actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/mascota/get/{id}":
+    get:
+      tags:
+        - Mascota
+      summary: Obtener mascota por ID
+      operationId: mascotaGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Mascota encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMascota"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /mascota/list:
+    get:
+      tags:
+        - Mascota
+      summary: Listar mascotas
+      operationId: mascotaList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - name: idPersona
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por dueño
+        - name: idMascotaEstados
+          in: query
+          schema:
+            type: string
+          description: 'Filtrar por estados (CSV de IDs, ej: "1,2,3")'
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de mascotas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMascotaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /mascota/estado/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar estados de mascota
+      operationId: mascotaEstadoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de estados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOMascotaEstadoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/mascota/delete/{id}":
+    delete:
+      tags:
+        - Mascota
+      summary: Eliminar mascota (soft delete)
+      description: |
+        Elimina lógicamente una mascota (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: mascotaDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Mascota eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/mascota/{id}/imagen-perfil":
+    post:
+      tags:
+        - Mascota
+      summary: Subir imagen de perfil de mascota
+      description: |
+        Sube una imagen de perfil para la mascota especificada.
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+
+        **Validaciones:**
+        - Tamaño máximo: 25 MB (26,214,400 bytes)
+        - Formatos permitidos: jpg, jpeg, png, gif, bmp, webp, svg, tiff, tif
+        - Solo archivos de imagen son aceptados
+        - Se crea automáticamente un adjunto de tipo MASCOTA_FOTO_PERFIL
+      operationId: mascotaUploadImagenPerfil
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: >
+                    Archivo de imagen. Máximo 25 MB.
+
+                    Formatos soportados: jpg, jpeg, png, gif, bmp, webp, svg,
+                    tiff, tif
+                descripcion:
+                  type: string
+                  maxLength: 250
+                  description: Descripción opcional de la imagen
+      responses:
+        "201":
+          description: Imagen subida exitosamente - Retorna el ID del adjunto creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          description: |
+            Solicitud inválida - Posibles causas:
+            - Archivo no es una imagen válida
+            - Tamaño excede 25 MB
+            - Formato de imagen no permitido
+            - Mascota no existe o está inactiva
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+    delete:
+      tags:
+        - Mascota
+      summary: Eliminar imagen de perfil de mascota
+      description: |
+        Elimina la imagen de perfil de una mascota.
+
+        **Roles requeridos:** VETERINARIO (1), RECEPCIONISTA (2), ADMINISTRADOR_SISTEMA (7)
+      operationId: mascotaDeleteImagenPerfil
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Imagen de perfil eliminada
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /especie/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar especies
+      operationId: especieList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de especies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOEspecieArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /especie/raza/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar razas
+      operationId: especieRazaList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idEspecie
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por especie
+      responses:
+        "200":
+          description: Lista de razas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTORazaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /alergia/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar alergias
+      operationId: alergiaList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de alergias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAlergiaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /alergia/condicioncronica/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar condiciones crónicas
+      operationId: alergiaCondicionCronicaList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de condiciones crónicas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOCondicionCronicaArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    Especie:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+    ResponseDTOEspecieArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Especie"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Raza:
+      type: object
+      required:
+        - id
+        - nombre
+        - idEspecie
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        idEspecie:
+          type: integer
+        especie:
+          $ref: "#/components/schemas/Especie"
+    ResponseDTORazaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Raza"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    MascotaEstado:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOMascotaEstadoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MascotaEstado"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Alergia:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOAlergiaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alergia"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    CondicionCronica:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOCondicionCronicaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CondicionCronica"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    MascotaAlergia:
+      type: object
+      properties:
+        idMascota:
+          type: integer
+        idAlergia:
+          type: integer
+        alergia:
+          $ref: "#/components/schemas/Alergia"
+    MascotaCondicionCronica:
+      type: object
+      properties:
+        idMascota:
+          type: integer
+        idCondicionCronica:
+          type: integer
+        condicionCronica:
+          $ref: "#/components/schemas/CondicionCronica"
+    Mascota:
+      type: object
+      required:
+        - id
+        - nombre
+        - sexo
+        - esterilizado
+        - activo
+        - idRaza
+        - idMascotaEstado
+        - idPersona
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        fechaNacimiento:
+          type: string
+          format: date
+          nullable: true
+        sexo:
+          $ref: "../openapi-shared.yaml#/components/schemas/SexoEnum"
+        color:
+          type: string
+          maxLength: 100
+          nullable: true
+        tamanio:
+          type: string
+          maxLength: 50
+          nullable: true
+        pelaje:
+          type: string
+          maxLength: 50
+          nullable: true
+        pesoGramos:
+          type: integer
+          nullable: true
+        esterilizado:
+          type: boolean
+        observaciones:
+          type: string
+          nullable: true
+        identificador:
+          type: string
+          maxLength: 250
+          nullable: true
+        activo:
+          type: boolean
+        idRaza:
+          type: integer
+        idMascotaEstado:
+          type: integer
+        idPersona:
+          type: integer
+        raza:
+          $ref: "#/components/schemas/Raza"
+        mascotaEstado:
+          $ref: "#/components/schemas/MascotaEstado"
+        persona:
+          $ref: "openapi-persona.yaml#/components/schemas/Persona"
+        mascotasAlergias:
+          type: array
+          items:
+            $ref: "#/components/schemas/MascotaAlergia"
+        mascotasCondicionesCronicas:
+          type: array
+          items:
+            $ref: "#/components/schemas/MascotaCondicionCronica"
+        idAdjuntoImagenPerfil:
+          type: integer
+          nullable: true
+          description: ID del adjunto de imagen de perfil
+    CreateMascotaDto:
+      type: object
+      required:
+        - nombre
+        - esterilizado
+        - idRaza
+        - idMascotaEstado
+        - idPersona
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Firulais
+        fechaNacimiento:
+          type: string
+          format: date
+          example: "2020-05-15"
+        sexo:
+          $ref: "../openapi-shared.yaml#/components/schemas/SexoEnum"
+        color:
+          type: string
+          maxLength: 100
+          example: Marrón
+        tamanio:
+          type: string
+          maxLength: 50
+          example: Mediano
+        pelaje:
+          type: string
+          maxLength: 50
+          example: Corto
+        pesoGramos:
+          type: integer
+          minimum: 1
+          example: 15000
+        esterilizado:
+          type: boolean
+          example: true
+        observaciones:
+          type: string
+          example: Muy activo
+        identificador:
+          type: string
+          maxLength: 250
+          example: CHIP-123456
+        idRaza:
+          type: integer
+          example: 1
+        idMascotaEstado:
+          type: integer
+          example: 1
+        idPersona:
+          type: integer
+          example: 1
+        idAlergias:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+        idCondicionesCronicas:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+          example:
+            - 1
+        idAdjuntoImagenPerfil:
+          type: integer
+          description: >-
+            ID del adjunto de imagen de perfil (debe ser tipo
+            MASCOTA_FOTO_PERFIL)
+          example: 123
+    UpdateMascotaDto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        fechaNacimiento:
+          type: string
+          format: date
+        sexo:
+          $ref: "../openapi-shared.yaml#/components/schemas/SexoEnum"
+        color:
+          type: string
+          maxLength: 100
+        tamanio:
+          type: string
+          maxLength: 50
+        pelaje:
+          type: string
+          maxLength: 50
+        pesoGramos:
+          type: integer
+          minimum: 1
+        esterilizado:
+          type: boolean
+        observaciones:
+          type: string
+        identificador:
+          type: string
+          maxLength: 250
+        activo:
+          type: boolean
+        idRaza:
+          type: integer
+        idMascotaEstado:
+          type: integer
+        idPersona:
+          type: integer
+        idAlergias:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+        idCondicionesCronicas:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+        idAdjuntoImagenPerfil:
+          type: integer
+          description: >-
+            ID del adjunto de imagen de perfil (debe ser tipo
+            MASCOTA_FOTO_PERFIL)
+    ResponseDTOMascota:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Mascota"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOMascotaArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mascota"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

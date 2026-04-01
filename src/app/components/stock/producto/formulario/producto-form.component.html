@@ -1,0 +1,287 @@
+<form [formGroup]="formGroupProducto" (ngSubmit)="guardar()">
+  <!-- Sección 1: Datos Generales -->
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label for="nombre" class="block mb-2">
+          Nombre <span class="text-red-500">*</span>
+        </label>
+        <input
+          id="nombre"
+          type="text"
+          pInputText
+          formControlName="nombre"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupProducto.get('nombre')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el nombre del producto"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupProducto.get("nombre")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >El nombre es requerido (máximo 250 caracteres)</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="categoria" class="block mb-2">
+          Categoría <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="categoria"
+          formControlName="categoria"
+          [options]="categorias"
+          optionLabel="nombre"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+          [class.ng-invalid]="
+            formGroupProducto.get('categoria')?.invalid && formEnviado
+          "
+          pTooltip="Seleccione la categoría del producto"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        >
+          <ng-template let-categoria pTemplate="item">
+            <div>
+              <div class="font-semibold">{{ categoria.nombre }}</div>
+              @if (categoria.descripcion) {
+                <div class="text-sm text-gray-600">
+                  {{ categoria.descripcion }}
+                </div>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+        @if (formGroupProducto.get("categoria")?.invalid && formEnviado) {
+          <small class="text-red-500">La categoría es requerida</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="codigoInterno" class="block mb-2">
+          Código Interno <span class="text-red-500">*</span>
+          @if (productoId) {
+            <span class="text-gray-500 text-sm">(No editable)</span>
+          }
+        </label>
+        <input
+          id="codigoInterno"
+          type="text"
+          pInputText
+          formControlName="codigoInterno"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupProducto.get('codigoInterno')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el código interno único del producto"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupProducto.get("codigoInterno")?.invalid && formEnviado) {
+          <small class="text-red-500">El código interno es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="codigo" class="block mb-2">
+          Código (Barras/SKU)
+          @if (productoId) {
+            <span class="text-gray-500 text-sm">(No editable)</span>
+          }
+        </label>
+        <input
+          id="codigo"
+          type="text"
+          pInputText
+          formControlName="codigo"
+          class="w-full"
+          pTooltip="Ingrese el código de barras o SKU (opcional)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+      </div>
+
+      <!-- Sección 2: Precios y Stock -->
+      <div class="col-12 md:col-6">
+        <label for="precioVenta" class="block mb-2">
+          Precio de Venta <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="precioVenta"
+          formControlName="precioVenta"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupProducto.get('precioVenta')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el precio de venta"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupProducto.get("precioVenta")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >El precio de venta es requerido y debe ser mayor o igual a 0</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="precioCosto" class="block mb-2">
+          Precio de Costo <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="precioCosto"
+          formControlName="precioCosto"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupProducto.get('precioCosto')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el precio de costo"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupProducto.get("precioCosto")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >El precio de costo es requerido y debe ser mayor o igual a 0</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="stockActual" class="block mb-2">
+          Stock Actual <span class="text-red-500">*</span>
+          @if (productoId) {
+            <span class="text-gray-500 text-sm">(No editable)</span>
+          }
+        </label>
+        <p-inputNumber
+          inputId="stockActual"
+          formControlName="stockActual"
+          [showButtons]="!productoId"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [min]="0"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupProducto.get('stockActual')?.invalid && formEnviado
+          "
+          [pTooltip]="
+            productoId
+              ? 'Stock actual (no editable, gestionar desde movimientos de inventario)'
+              : 'Ingrese el stock inicial'
+          "
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (
+          formGroupProducto.get("stockActual")?.invalid &&
+          formEnviado &&
+          !productoId
+        ) {
+          <small class="text-red-500"
+            >El stock actual es requerido y debe ser mayor o igual a 0</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="stockMinimo" class="block mb-2"> Stock Mínimo </label>
+        <p-inputNumber
+          inputId="stockMinimo"
+          formControlName="stockMinimo"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [min]="0"
+          class="w-full"
+          pTooltip="Ingrese el stock mínimo para alertas"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label for="fechaVencimiento" class="block mb-2">
+          Fecha de Vencimiento
+        </label>
+        <p-datepicker
+          inputId="fechaVencimiento"
+          formControlName="fechaVencimiento"
+          [showIcon]="true"
+          iconDisplay="input"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          pTooltip="Seleccione la fecha de vencimiento (opcional)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+      </div>
+
+      <div class="col-12">
+        <label for="descripcion" class="block mb-2"> Descripción </label>
+        <textarea
+          id="descripcion"
+          pTextarea
+          formControlName="descripcion"
+          class="w-full"
+          rows="3"
+          pTooltip="Ingrese una descripción del producto (opcional)"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 3: Estado -->
+  @if (productoId && puedeToggleActivo) {
+    <div class="mb-4">
+      <div class="grid">
+        <div class="col-12">
+          <div class="flex align-items-center">
+            <p-checkbox id="activo" formControlName="activo" [binary]="true" />
+            <label for="activo" class="ml-2">Producto activo</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex justify-content-between gap-2 mt-4">
+    <p-button
+      label="Cancelar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="guardar()" />
+  </div>
+</form>

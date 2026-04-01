@@ -1,0 +1,381 @@
+# OpenAPI Usuario Module
+# User management, roles, and authentication accounts
+#
+# ROLE-BASED ACCESS CONTROL (RBAC)
+# This module implements role-based authorization for sensitive operations:
+#
+# Available Roles:
+#   1 - VETERINARIO
+#   2 - RECEPCIONISTA
+#   3 - CAJERO
+#   4 - GESTOR_INVENTARIO
+#   5 - ADMINISTRADOR
+#   6 - AUDITOR
+#   7 - ADMINISTRADOR_SISTEMA
+#
+# Access Rules:
+#   - Create/Update Usuario: Requires ADMINISTRADOR (5) or ADMINISTRADOR_SISTEMA (7)
+#   - Delete Usuario: Requires ADMINISTRADOR (5) or ADMINISTRADOR_SISTEMA (7)
+#   - List Roles: Any authenticated user
+#   - Get/List Usuario: Any authenticated user
+#
+# Error Responses:
+#   - 401 Unauthorized: Missing, expired, or invalid JWT token
+#   - 403 Forbidden: Valid token but insufficient role permissions
+
+paths:
+  /usuario/create:
+    post:
+      tags:
+        - Usuario
+      summary: Crear usuario
+      description: "**Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)"
+      operationId: usuarioCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUsuarioDto"
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/usuario/update/{id}":
+    put:
+      tags:
+        - Usuario
+      summary: Actualizar usuario
+      description: "**Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)"
+      operationId: usuarioUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsuarioDto"
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/usuario/get/{id}":
+    get:
+      tags:
+        - Usuario
+      summary: Obtener usuario por ID
+      operationId: usuarioGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOUsuario"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /usuario/list:
+    get:
+      tags:
+        - Usuario
+      summary: Listar usuarios
+      operationId: usuarioList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOUsuarioArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /usuario/roles/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar roles
+      operationId: usuarioRolesList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTORolArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /usuario/change-password:
+    put:
+      tags:
+        - Usuario
+      summary: Cambiar contraseña
+      description: Permite al usuario autenticado cambiar su propia contraseña.
+      operationId: usuarioChangePassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordDto"
+      responses:
+        "200":
+          description: Contraseña cambiada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/usuario/delete/{id}":
+    delete:
+      tags:
+        - Usuario
+      summary: Eliminar usuario (soft delete)
+      description: "**Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)"
+      operationId: usuarioDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Usuario eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          description: Prohibido - Rol insuficiente o no se puede eliminar el usuario por defecto
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              examples:
+                insufficient_role:
+                  summary: Rol insuficiente
+                  value:
+                    data: null
+                    code: 403
+                    error: "Acceso denegado. Se requiere uno de los siguientes roles: 5, 7"
+                default_user:
+                  summary: Usuario por defecto no se puede eliminar
+                  value:
+                    data: null
+                    code: 403
+                    error: No se puede eliminar el usuario por defecto
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+
+components:
+  schemas:
+    Rol:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: |
+            ID del rol:
+            - 1: VETERINARIO
+            - 2: RECEPCIONISTA
+            - 3: CAJERO
+            - 4: GESTOR_INVENTARIO
+            - 5: ADMINISTRADOR
+            - 6: AUDITOR
+            - 7: ADMINISTRADOR_SISTEMA
+          enum: [1, 2, 3, 4, 5, 6, 7]
+        nombre:
+          type: string
+          maxLength: 100
+          description: Nombre del rol
+        descripcion:
+          type: string
+          nullable: true
+          description: Descripción del rol (opcional)
+    ResponseDTORolArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rol"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Usuario:
+      type: object
+      required:
+        - id
+        - nombre
+        - fechaAlta
+        - ultimoAcceso
+        - activo
+        - idPersona
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        fechaAlta:
+          type: string
+          format: date-time
+        ultimoAcceso:
+          type: string
+          format: date-time
+        activo:
+          type: boolean
+        idPersona:
+          type: integer
+        persona:
+          $ref: "openapi-persona.yaml#/components/schemas/Persona"
+        usuariosRoles:
+          type: array
+          items:
+            type: object
+            properties:
+              idUsuario:
+                type: integer
+              idRol:
+                type: integer
+              rol:
+                $ref: "#/components/schemas/Rol"
+    CreateUsuarioDto:
+      type: object
+      required:
+        - username
+        - password
+        - idPersona
+      properties:
+        username:
+          type: string
+          minLength: 4
+          example: jrodriguez
+        password:
+          type: string
+          minLength: 4
+          example: password123
+        idPersona:
+          type: integer
+          example: 1
+        roles:
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+    ChangePasswordDto:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          minLength: 4
+          description: Contraseña actual del usuario
+          example: password123
+        newPassword:
+          type: string
+          minLength: 4
+          description: Nueva contraseña (mínimo 4 caracteres)
+          example: newpassword456
+    UpdateUsuarioDto:
+      type: object
+      properties:
+        password:
+          type: string
+          minLength: 4
+        activo:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: integer
+    ResponseDTOUsuario:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Usuario"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOUsuarioArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Usuario"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

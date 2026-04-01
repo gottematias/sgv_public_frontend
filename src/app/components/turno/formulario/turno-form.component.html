@@ -1,0 +1,488 @@
+<form [formGroup]="formGroupTurno" (ngSubmit)="guardar()">
+  <div class="grid">
+    <!-- Row 1: Mascota and Veterinario -->
+    <div class="col-12 md:col-6">
+      <label for="idMascota" class="block mb-2">
+        Mascota <span class="text-red-500">*</span>
+      </label>
+      @if (modoEdicion) {
+        <!-- Modo Edición: Solo visualización -->
+        <div class="p-3 bg-gray-50 border-round">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-heart text-600"></i>
+            <span class="font-medium">
+              @if (getSelectedMascota()) {
+                {{ getMascotaLabel(getSelectedMascota()!) }}
+              } @else {
+                Cargando...
+              }
+            </span>
+          </div>
+        </div>
+        <small class="text-500 block mt-1">
+          La mascota no puede modificarse en modo edición
+        </small>
+      } @else {
+        <!-- Modo Creación: Select interactivo -->
+        <p-select
+          id="idMascota"
+          [options]="mascotas"
+          formControlName="idMascota"
+          placeholder="Seleccione mascota"
+          [filter]="true"
+          filterBy="nombre,persona.apellidos,persona.nombres"
+          optionValue="id"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          [class.ng-invalid]="
+            formGroupTurno.get('idMascota')?.invalid &&
+            formGroupTurno.get('idMascota')?.touched
+          "
+        >
+          <ng-template let-mascota pTemplate="item">
+            {{ getMascotaLabel(mascota) }}
+          </ng-template>
+          <ng-template let-mascota pTemplate="selectedItem">
+            {{ getMascotaLabel(mascota) }}
+          </ng-template>
+        </p-select>
+        @if (
+          formGroupTurno.get("idMascota")?.invalid &&
+          formGroupTurno.get("idMascota")?.touched
+        ) {
+          <small class="text-red-500">La mascota es requerida</small>
+        }
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="idEmpleadoAsignado" class="block mb-2"> Veterinario </label>
+      @if (modoEdicion) {
+        <!-- Modo Edición: Solo visualización -->
+        <div class="p-3 bg-gray-50 border-round">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-user-md text-600"></i>
+            <span class="font-medium">
+              @if (getSelectedVeterinario()) {
+                {{ getVeterinarioDisplayLabel(getSelectedVeterinario()!) }}
+              } @else {
+                No asignado
+              }
+            </span>
+          </div>
+        </div>
+        <small class="text-500 block mt-1">
+          El veterinario no puede modificarse en modo edición
+        </small>
+      } @else if (esVeterinario && veterinarioAutoAsignado) {
+        <div class="p-3 bg-gray-50 border-round">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-user-md text-600"></i>
+            <span class="font-medium">
+              @if (getSelectedVeterinario()) {
+                {{ getVeterinarioDisplayLabel(getSelectedVeterinario()!) }}
+              } @else {
+                Cargando...
+              }
+            </span>
+          </div>
+        </div>
+        <small class="text-500 block mt-1">
+          <i class="pi pi-lock mr-1"></i>
+          Auto-asignado a su cuenta
+        </small>
+      } @else {
+        <!-- Modo Creación: Select interactivo -->
+        <p-select
+          id="idEmpleadoAsignado"
+          [options]="veterinarios"
+          formControlName="idEmpleadoAsignado"
+          placeholder="Seleccione un veterinario (opcional)"
+          [filter]="true"
+          filterBy="usuario.persona.apellidos,usuario.persona.nombres,matricula"
+          optionValue="id"
+          [showClear]="true"
+          class="w-full"
+          [style]="{ width: '100%' }"
+        >
+          <ng-template let-vet pTemplate="item">
+            {{ getVeterinarioDisplayLabel(vet) }}
+          </ng-template>
+          <ng-template let-vet pTemplate="selectedItem">
+            {{ getVeterinarioDisplayLabel(vet) }}
+          </ng-template>
+        </p-select>
+        <small class="text-500">
+          Opcional - Se autocompletará al seleccionar un horario
+        </small>
+      }
+    </div>
+
+    <!-- Row 2: Tipo de Turno and Estado -->
+    <div class="col-12 md:col-6">
+      <label for="idTurnoTipo" class="block mb-2">
+        Tipo de Turno <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="idTurnoTipo"
+        [options]="turnoTipos"
+        formControlName="idTurnoTipo"
+        placeholder="Seleccione tipo"
+        optionLabel="nombre"
+        optionValue="id"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupTurno.get('idTurnoTipo')?.invalid &&
+          formGroupTurno.get('idTurnoTipo')?.touched
+        "
+      >
+        <ng-template let-tipo pTemplate="item">
+          <div>
+            <div class="font-semibold">{{ tipo.nombre }}</div>
+            @if (tipo.descripcion) {
+              <div class="text-sm text-gray-600">
+                {{ tipo.descripcion }}
+              </div>
+            }
+          </div>
+        </ng-template>
+      </p-select>
+      @if (
+        formGroupTurno.get("idTurnoTipo")?.invalid &&
+        formGroupTurno.get("idTurnoTipo")?.touched
+      ) {
+        <small class="text-red-500">El tipo de turno es requerido</small>
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="idTurnoEstado" class="block mb-2">
+        Estado <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="idTurnoEstado"
+        [options]="turnoEstados"
+        formControlName="idTurnoEstado"
+        placeholder="Seleccione estado"
+        optionLabel="nombre"
+        optionValue="id"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="
+          formGroupTurno.get('idTurnoEstado')?.invalid &&
+          formGroupTurno.get('idTurnoEstado')?.touched
+        "
+      ></p-select>
+      @if (
+        formGroupTurno.get("idTurnoEstado")?.invalid &&
+        formGroupTurno.get("idTurnoEstado")?.touched
+      ) {
+        <small class="text-red-500">El estado es requerido</small>
+      }
+    </div>
+
+    <!-- Row 3: Fecha and Duración -->
+    <div class="col-12 md:col-6">
+      <label for="fechaHora" class="block mb-2">
+        Fecha y Hora <span class="text-red-500">*</span>
+      </label>
+      @if (modoEdicion) {
+        <!-- Modo Edición: Solo visualización -->
+        <div class="p-3 bg-gray-50 border-round">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-calendar text-600"></i>
+            <span class="font-medium">
+              {{
+                formGroupTurno.get("fechaHora")?.value
+                  | date: "dd/MM/yyyy HH:mm"
+              }}
+            </span>
+          </div>
+        </div>
+        <small class="text-500 block mt-1">
+          Para cambiar la fecha/hora, debe cancelar y crear un nuevo turno
+        </small>
+      } @else {
+        <!-- Modo Creación: Date picker interactivo -->
+        <p-datepicker
+          inputId="fechaHora"
+          [(ngModel)]="selectedDate"
+          [ngModelOptions]="{ standalone: true }"
+          [showIcon]="true"
+          iconDisplay="button"
+          [showOnFocus]="false"
+          dateFormat="dd/mm/yy"
+          placeholder="DD/MM/YYYY"
+          appendTo="body"
+          [minDate]="minDate"
+          (onSelect)="onDateChange($event)"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          [class.ng-invalid]="
+            !selectedDate && formGroupTurno.get('fechaHora')?.touched
+          "
+        ></p-datepicker>
+        @if (!selectedDate && formGroupTurno.get("fechaHora")?.touched) {
+          <small class="text-red-500">La fecha es requerida</small>
+        }
+        <small class="text-muted block mt-1">
+          Seleccione fecha para ver horarios disponibles
+        </small>
+      }
+    </div>
+
+    <div class="col-12 md:col-6">
+      <label for="duracion" class="block mb-2">
+        Duración (minutos) <span class="text-red-500">*</span>
+      </label>
+      @if (modoEdicion) {
+        <!-- Modo Edición: Solo visualización -->
+        <div class="p-3 bg-gray-50 border-round">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-clock text-600"></i>
+            <span class="font-medium">
+              {{ formGroupTurno.get("duracion")?.value }} minutos
+            </span>
+          </div>
+        </div>
+        <small class="text-500 block mt-1">
+          La duración no puede modificarse en modo edición
+        </small>
+      } @else {
+        <!-- Modo Creación: Input number interactivo -->
+        <p-inputNumber
+          id="duracion"
+          formControlName="duracion"
+          [min]="15"
+          [step]="15"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          placeholder="Duración en minutos"
+          class="w-full"
+          [style]="{ width: '100%' }"
+          [class.ng-invalid]="
+            formGroupTurno.get('duracion')?.invalid &&
+            formGroupTurno.get('duracion')?.touched
+          "
+        ></p-inputNumber>
+        @if (
+          formGroupTurno.get("duracion")?.invalid &&
+          formGroupTurno.get("duracion")?.touched
+        ) {
+          <small class="text-red-500">
+            @if (formGroupTurno.get("duracion")?.hasError("required")) {
+              La duración es requerida
+            }
+            @if (formGroupTurno.get("duracion")?.hasError("min")) {
+              Mínimo 15 minutos
+            }
+            @if (formGroupTurno.get("duracion")?.hasError("notMultipleOf15")) {
+              Debe ser múltiplo de 15
+            }
+          </small>
+        }
+      }
+    </div>
+
+    <!-- Row 4: Available Time Slots -->
+    @if (!modoEdicion) {
+      <div class="col-12">
+        <div class="flex align-items-center justify-content-between mb-2">
+          <div class="font-semibold">
+            @if (selectedSlot && formGroupTurno.get("fechaHora")?.value) {
+              <span>Horario Seleccionado: {{ getSelectedSlotDisplay() }}</span>
+              <span class="text-green-600 ml-2">✓</span>
+            } @else {
+              <span>Horarios Disponibles</span>
+              <span class="text-red-500 ml-2">*</span>
+            }
+          </div>
+          @if (selectedSlot && formGroupTurno.get("fechaHora")?.value) {
+            <p-button
+              label="Cambiar horario"
+              icon="pi pi-pencil"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              (onClick)="expandAllAccordions()"
+            />
+          }
+        </div>
+
+        @if (loadingSlots) {
+          <div class="p-3 bg-gray-50 border-round text-center">
+            <i class="pi pi-spin pi-spinner mr-2"></i>
+            <span>Cargando horarios disponibles...</span>
+          </div>
+        } @else if (!selectedDate) {
+          <div class="p-3 bg-blue-50 border-round text-center">
+            <i class="pi pi-info-circle mr-2"></i>
+            <span>
+              Seleccione una fecha para ver los horarios disponibles de todos
+              los veterinarios
+            </span>
+          </div>
+        } @else if (vetSlotGroups.length === 0 && !loadingSlots) {
+          <div class="p-3 bg-orange-50 border-round text-center">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            <span>No hay horarios disponibles para la fecha seleccionada</span>
+          </div>
+        } @else {
+          <p-accordion
+            [multiple]="true"
+            [value]="expandedAccordionIndexes"
+            class="slots-accordion"
+          >
+            @for (
+              vetGroup of vetSlotGroups;
+              track vetGroup.empleadoAsignado.id;
+              let i = $index
+            ) {
+              <p-accordion-panel [value]="i">
+                <p-accordion-header>
+                  <div
+                    class="flex align-items-center justify-content-between w-full"
+                  >
+                    <div class="flex align-items-center gap-2">
+                      <i class="pi pi-user-md"></i>
+                      <span class="font-semibold">
+                        {{ vetGroup.veterinarioLabel }}
+                      </span>
+                      @if (
+                        selectedSlot &&
+                        selectedVeterinarioId === vetGroup.empleadoAsignado.id
+                      ) {
+                        <p-tag
+                          [value]="
+                            'Seleccionado: ' + formatSlotTime(selectedSlot)
+                          "
+                          severity="success"
+                          styleClass="ml-2"
+                          icon="pi pi-check"
+                        />
+                      }
+                    </div>
+                    <p-tag
+                      [value]="getVetSlotCount(vetGroup) + ' horarios'"
+                      severity="info"
+                      styleClass="ml-2"
+                    />
+                  </div>
+                </p-accordion-header>
+                <p-accordion-content>
+                  <div class="date-sections">
+                    @for (
+                      dateGroup of vetGroup.slotsPorFecha;
+                      track dateGroup.fecha
+                    ) {
+                      <div class="date-section mb-3">
+                        <div class="date-header mb-2">
+                          <i class="pi pi-calendar mr-2"></i>
+                          <span class="font-medium">{{
+                            dateGroup.fechaDisplay
+                          }}</span>
+                        </div>
+
+                        <div class="time-slots-grid">
+                          @for (
+                            slot of dateGroup.slots;
+                            track slot.fechaHoraInicio
+                          ) {
+                            <button
+                              type="button"
+                              class="time-slot-button"
+                              [class.selected]="
+                                isSlotSelected(
+                                  slot,
+                                  vetGroup.empleadoAsignado.id
+                                )
+                              "
+                              (click)="
+                                selectSlot(slot, vetGroup.empleadoAsignado)
+                              "
+                              pTooltip="Duración: {{
+                                slot.duracionMinutos
+                              }} minutos"
+                              tooltipPosition="top"
+                              [life]="3000"
+                            >
+                              {{ formatSlotTime(slot) }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
+            }
+          </p-accordion>
+
+          @if (!formGroupTurno.get("fechaHora")?.value) {
+            <small class="text-red-500 block mt-2">
+              <i class="pi pi-info-circle mr-1"></i>
+              Debe seleccionar un horario para continuar
+            </small>
+          }
+        }
+      </div>
+    }
+
+    <!-- Row 5: Motivo -->
+    <div class="col-12">
+      <label for="motivo" class="block mb-2">Motivo</label>
+      <input
+        id="motivo"
+        type="text"
+        pInputText
+        formControlName="motivo"
+        class="w-full"
+        placeholder="Motivo de la consulta (opcional, máx. 100 caracteres)"
+        maxlength="100"
+      />
+      @if (formGroupTurno.get("motivo")?.hasError("maxlength")) {
+        <small class="text-red-500">Máximo 100 caracteres</small>
+      }
+    </div>
+
+    <!-- Row 5: Notas -->
+    <div class="col-12">
+      <label for="notas" class="block mb-2">Notas</label>
+      <textarea
+        id="notas"
+        pTextarea
+        formControlName="notas"
+        class="w-full"
+        rows="3"
+        placeholder="Notas adicionales (opcional)"
+      ></textarea>
+    </div>
+
+    @if (modoEdicion && puedeToggleActivo) {
+      <div class="col-12 md:col-6">
+        <label for="activo" class="block mb-2">Estado</label>
+        <div class="flex align-items-center h-3rem">
+          <p-checkbox
+            id="activo"
+            formControlName="activo"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="activo" class="ml-2">Turno activo</label>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-3">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      (onClick)="cancelar()"
+      type="button"
+    />
+    <p-button label="Guardar" type="submit" />
+  </div>
+</form>

@@ -1,0 +1,14 @@
+:root {
+  --font-family: "Nunito", sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: "Nunito", sans-serif;
+}

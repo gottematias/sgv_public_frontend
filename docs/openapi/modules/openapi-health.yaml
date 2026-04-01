@@ -1,0 +1,38 @@
+# OpenAPI Health Module
+# Health check endpoint - no authentication required, rate limiting skipped
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: >
+        Verifica el estado del servidor. No requiere autenticación y está
+        excluido del rate limiting.
+      operationId: healthCheck
+      security: []
+      responses:
+        "200":
+          description: Servidor en línea
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: ok
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2026-02-28T12:00:00.000Z"
+                  code:
+                    type: integer
+                    example: 0
+                  error:
+                    type: string
+                    example: ""

@@ -1,0 +1,82 @@
+# OpenAPI Auth Module
+# Authentication and JWT token management endpoints
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Iniciar sesión
+      description: |
+        Autentica un usuario y retorna un token JWT.
+
+        **Contenido del JWT:**
+        El token incluye información completa del usuario en su payload:
+        - Identificación del usuario (usuario_id, usuario_nombre)
+        - Datos de la persona asociada (persona_id, persona_nombre, persona_apellido)
+        - Roles asignados (rol_id - array de IDs)
+
+        Esta información permite al frontend:
+        - Mostrar nombre completo del usuario sin consultas adicionales
+        - Implementar autorización basada en roles del lado del cliente
+        - Personalizar la UI según el perfil del usuario
+
+        Ver schema `JwtPayload` para estructura completa del payload decodificado.
+
+        **Límite de tasa:** 5 requests por 60 segundos por IP (prevención de fuerza bruta)
+      operationId: authLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../openapi-shared.yaml#/components/schemas/LoginDto"
+      responses:
+        "201":
+          description: Login exitoso - Retorna token JWT con payload expandido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOToken"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+  /auth/refreshtoken:
+    get:
+      tags:
+        - Auth
+      summary: Renovar token JWT
+      description: |
+        Renueva el token JWT con una nueva fecha de expiración.
+
+        **Actualización de datos:**
+        El nuevo token contiene información actualizada del usuario desde la base de datos:
+        - Si cambiaron los roles del usuario, el nuevo token reflejará esos cambios
+        - Si cambió el nombre de la persona, se actualizará en el payload
+        - Si el usuario fue desactivado, la renovación fallará con 401
+
+        Usar este endpoint antes de que expire el token actual para mantener la sesión activa.
+
+        Ver schema `JwtPayload` para estructura completa del payload.
+      operationId: authRefreshToken
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Token renovado con información actualizada del usuario
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOToken"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas: {}
+  # All auth-related schemas are defined in openapi-shared.yaml:
+  # - LoginDto
+  # - TokenResponse
+  # - JwtPayload
+  # - ResponseDTOToken

@@ -1,0 +1,115 @@
+<p-confirmDialog
+  key="turnosDia"
+  position="top"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<div>
+  <div class="flex justify-content-between align-items-center mb-3">
+    <h2 class="text-xl font-semibold">Turnos del Día</h2>
+    <div class="flex align-items-center gap-2">
+      <p-button
+        icon="pi pi-refresh"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        (onClick)="refrescarTurnos()"
+        [loading]="cargandoTurnos"
+        pTooltip="Refrescar turnos"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+      <p-datepicker
+        [(ngModel)]="fechaSeleccionada"
+        (ngModelChange)="onFechaChange()"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+      >
+      </p-datepicker>
+    </div>
+  </div>
+
+  <div
+    *ngIf="cargandoTurnos"
+    class="flex justify-content-center align-items-center p-5"
+  >
+    <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+  </div>
+
+  <div
+    *ngIf="!cargandoTurnos"
+    class="overflow-y-auto px-2"
+    style="max-height: 600px"
+  >
+    <div
+      *ngFor="let turno of turnosDelDia"
+      class="card mb-3 p-3 border-round-lg shadow-2 hover:shadow-4 transition-all transition-duration-200 border-1 surface-border"
+    >
+      <div class="flex justify-content-end mb-2">
+        <p-tag
+          [value]="turno.turnoEstado?.nombre"
+          [severity]="getEstadoSeverity(turno.turnoEstado?.nombre)"
+        ></p-tag>
+      </div>
+
+      <div class="flex align-items-center gap-2 mb-2">
+        <i class="pi pi-clock text-xl text-primary"></i>
+        <span class="text-xl font-bold">{{ formatHora(turno.fechaHora) }}</span>
+        <span class="text-500">• {{ turno.duracionMinutos }} min</span>
+      </div>
+
+      <div class="flex align-items-center gap-2 mb-2">
+        <i class="pi pi-heart text-primary"></i>
+        <span class="font-semibold">{{ turno.mascota?.nombre || "-" }}</span>
+        <i class="pi pi-user text-500 ml-2"></i>
+        <span class="text-500">{{
+          getDuenoNombre(turno.mascota?.persona)
+        }}</span>
+      </div>
+
+      <div class="flex align-items-center gap-2 mb-1">
+        <i class="pi pi-shield text-primary"></i>
+        <span class="text-sm">{{
+          getVeterinarioNombre(turno.empleadoAsignado)
+        }}</span>
+      </div>
+
+      <div class="flex align-items-center gap-2 mb-3">
+        <i class="pi pi-file-edit text-primary"></i>
+        <span class="text-sm text-600">{{
+          turno.turnoTipo?.nombre || "-"
+        }}</span>
+      </div>
+
+      <div class="flex align-items-center gap-2 mt-3">
+        <p-select
+          [options]="estadosDisponibles"
+          [(ngModel)]="turno.idTurnoEstado"
+          (onChange)="cambiarEstadoTurno(turno, $event.value)"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Cambiar estado"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+        ></p-select>
+        <p-button
+          icon="pi pi-pencil"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="editarTurno(turno)"
+          pTooltip="Editar turno"
+          tooltipPosition="bottom"
+          [tooltipOptions]="{ life: 3000 }"
+        ></p-button>
+      </div>
+    </div>
+
+    <div *ngIf="turnosDelDia.length === 0" class="text-center p-5">
+      <i class="pi pi-calendar-times text-6xl text-400 mb-3"></i>
+      <p class="text-500">No hay turnos programados para esta fecha</p>
+    </div>
+  </div>
+</div>

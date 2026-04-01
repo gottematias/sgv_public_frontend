@@ -1,0 +1,251 @@
+<div
+  *ngIf="cargandoDatos"
+  class="flex justify-content-center align-items-center p-5"
+>
+  <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+</div>
+
+<div *ngIf="!cargandoDatos">
+  <p-tabs [(value)]="activeTabValue" (valueChange)="onTabChange($event)">
+    <p-tablist>
+      <p-tab [value]="0">
+        <i class="pi pi-heart mr-2"></i>
+        Datos de Mascota
+      </p-tab>
+      <p-tab [value]="1">
+        <i class="pi pi-file-edit mr-2"></i>
+        Historial Clínico
+      </p-tab>
+      <p-tab [value]="2">
+        <i class="pi pi-shield mr-2"></i>
+        Vacunación
+      </p-tab>
+      <p-tab [value]="3">
+        <i class="pi pi-user mr-2"></i>
+        Datos del Dueño
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel [value]="0">
+        <app-mascota-form
+          #mascotaForm
+          [mascotaId]="mascotaId"
+          [modoEdicion]="true"
+          [modoEmbebido]="true"
+          (mascotaGuardada)="onMascotaGuardada()"
+          (formularioCancelado)="onFormularioCancelado()"
+        ></app-mascota-form>
+      </p-tabpanel>
+
+      <p-tabpanel [value]="1">
+        <div
+          *ngIf="cargandoHistoriales"
+          class="flex justify-content-center align-items-center p-5"
+        >
+          <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        </div>
+
+        <div *ngIf="!cargandoHistoriales">
+          <div class="flex justify-content-end mb-3">
+            <p-button
+              icon="pi pi-plus"
+              (onClick)="abrirNuevoHistorialClinico()"
+              pTooltip="Registrar nuevo historial clínico"
+              tooltipPosition="bottom"
+              [tooltipOptions]="{ life: 3000 }"
+            ></p-button>
+          </div>
+
+          <div class="overflow-y-auto" style="max-height: 500px">
+            <div
+              *ngFor="let historial of historiales"
+              class="card mb-3 p-3 border-round-lg shadow-2 hover:shadow-4 transition-all transition-duration-200 border-1 surface-border cursor-pointer"
+              tabindex="0"
+              role="button"
+              (click)="abrirHistorialClinico(historial)"
+              (keydown.enter)="abrirHistorialClinico(historial)"
+              (keydown.space)="
+                abrirHistorialClinico(historial); $event.preventDefault()
+              "
+            >
+              <div class="flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h4 class="mt-0 mb-1 text-lg font-semibold">
+                    <i class="pi pi-calendar mr-2"></i>
+                    {{ formatFechaHora(historial.fechaConsulta) }}
+                  </h4>
+                </div>
+                <p-button
+                  icon="pi pi-eye"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  (onClick)="
+                    abrirHistorialClinico(historial); $event.stopPropagation()
+                  "
+                  pTooltip="Ver detalle completo"
+                  tooltipPosition="bottom"
+                  [tooltipOptions]="{ life: 3000 }"
+                ></p-button>
+              </div>
+
+              <div class="mb-2">
+                <strong>
+                  <i class="pi pi-user mr-2"></i>
+                  Veterinario:
+                </strong>
+                {{ getVeterinarioNombre(historial) }}
+              </div>
+
+              <div class="mb-2">
+                <strong>
+                  <i class="pi pi-comment mr-2"></i>
+                  Motivo:
+                </strong>
+                {{ historial.motivoConsulta }}
+              </div>
+
+              <div class="mb-2">
+                <strong>
+                  <i class="pi pi-list mr-2"></i>
+                  Diagnósticos:
+                </strong>
+                <div class="mt-1" *ngIf="getDiagnosticosTexto(historial)">
+                  <p-tag
+                    *ngFor="let hd of historial.historialesDiagnosticos"
+                    [value]="hd.diagnostico.nombre"
+                    severity="info"
+                    class="mr-1 mb-1"
+                  ></p-tag>
+                </div>
+                <span *ngIf="!getDiagnosticosTexto(historial)" class="text-500">
+                  Sin diagnósticos
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  <i class="pi pi-paperclip mr-2"></i>
+                  Adjuntos:
+                </strong>
+                <p-tag
+                  [value]="getContadorAdjuntos(historial) + ' archivo(s)'"
+                  [severity]="
+                    getContadorAdjuntos(historial) > 0
+                      ? 'secondary'
+                      : 'contrast'
+                  "
+                ></p-tag>
+              </div>
+            </div>
+
+            <div *ngIf="historiales.length === 0" class="text-center p-5">
+              <i class="pi pi-file-edit text-6xl text-400 mb-3"></i>
+              <p class="text-500">No hay registros de historial clínico</p>
+            </div>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <p-tabpanel [value]="2">
+        <div
+          *ngIf="cargandoVacunas"
+          class="flex justify-content-center align-items-center p-5"
+        >
+          <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        </div>
+
+        <div *ngIf="!cargandoVacunas">
+          <div class="flex justify-content-end mb-3">
+            <p-button
+              icon="pi pi-plus"
+              (onClick)="abrirNuevaVacuna()"
+              pTooltip="Registrar nueva vacuna"
+              tooltipPosition="bottom"
+              [tooltipOptions]="{ life: 3000 }"
+            ></p-button>
+          </div>
+
+          <div class="overflow-y-auto" style="max-height: 500px">
+            <div
+              *ngFor="let vacuna of vacunas"
+              class="card mb-3 p-3 border-round-lg shadow-2 hover:shadow-4 transition-all transition-duration-200 border-1 surface-border cursor-pointer"
+              tabindex="0"
+              role="button"
+              (click)="abrirVacuna(vacuna)"
+              (keydown.enter)="abrirVacuna(vacuna)"
+              (keydown.space)="abrirVacuna(vacuna); $event.preventDefault()"
+              [attr.aria-label]="
+                'Ver detalles de vacuna: ' +
+                (vacuna.vacunaTipo?.nombre || 'Sin nombre')
+              "
+            >
+              <div class="flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h4 class="mt-0 mb-1 text-lg font-semibold">
+                    {{ vacuna.vacunaTipo?.nombre || "-" }}
+                  </h4>
+                  <p class="m-0 text-sm text-500">
+                    Aplicada: {{ formatFecha(vacuna.fechaAplicacion) }}
+                  </p>
+                </div>
+                <p-button
+                  icon="pi pi-eye"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  (onClick)="abrirVacuna(vacuna); $event.stopPropagation()"
+                  pTooltip="Ver detalle completo"
+                  tooltipPosition="bottom"
+                  [tooltipOptions]="{ life: 3000 }"
+                ></p-button>
+              </div>
+
+              <div class="grid">
+                <div class="col-6" *ngIf="vacuna.lote">
+                  <strong>Lote:</strong> {{ vacuna.lote }}
+                </div>
+                <div class="col-6" *ngIf="vacuna.numeroSerie">
+                  <strong>N° Serie:</strong> {{ vacuna.numeroSerie }}
+                </div>
+                <div class="col-12" *ngIf="vacuna.fechaProximaAplicacion">
+                  <strong>Próxima Aplicación:</strong>
+                  <p-tag
+                    [value]="formatFecha(vacuna.fechaProximaAplicacion)"
+                    severity="warning"
+                  ></p-tag>
+                </div>
+                <div class="col-12" *ngIf="vacuna.observaciones">
+                  <strong>Observaciones:</strong> {{ vacuna.observaciones }}
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="vacunas.length === 0" class="text-center p-5">
+              <i class="pi pi-shield text-6xl text-400 mb-3"></i>
+              <p class="text-500">No hay registros de vacunación</p>
+            </div>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <p-tabpanel [value]="3">
+        <div *ngIf="!dueno" class="text-center p-5">
+          <i class="pi pi-user text-6xl text-400 mb-3"></i>
+          <p class="text-500">No se encontró información del dueño</p>
+        </div>
+
+        <div *ngIf="dueno">
+          <app-persona-form
+            #personaForm
+            [personaId]="dueno.id"
+            [modoEmbebido]="true"
+            (personaGuardada)="onPersonaGuardada()"
+            (formularioCancelado)="onFormularioCancelado()"
+          ></app-persona-form>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</div>

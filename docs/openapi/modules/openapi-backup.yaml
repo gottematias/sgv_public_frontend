@@ -1,0 +1,449 @@
+# OpenAPI Backup Module
+# Database backup endpoint - requires ADMINISTRADOR_SISTEMA role
+
+paths:
+  /backup:
+    get:
+      tags:
+        - Backup
+      summary: Descargar backup de la base de datos
+      description: >
+        Genera y descarga un backup completo de la base de datos PostgreSQL
+        en formato `.dump` (formato custom comprimido de PostgreSQL, `-Fc`).
+
+
+        El archivo es comprimido y solo puede restaurarse con `pg_restore`.
+        Al restaurar, incluye `DROP DATABASE IF EXISTS` y `CREATE DATABASE`
+        para recrear la base de datos desde cero.
+
+
+        El archivo temporal es eliminado del servidor inmediatamente después de
+        completarse o fallar la descarga.
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: descargarBackup
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Archivo de backup generado exitosamente
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="backup_sgv_2026-03-14T00-00-00-000Z.dump"'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+        "500":
+          description: Error al generar o transmitir el backup
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              examples:
+                errorGeneracion:
+                  summary: Error al ejecutar pg_dump
+                  value:
+                    data: null
+                    code: 500
+                    error: Error al generar el backup de la base de datos
+                errorVacio:
+                  summary: Backup vacío o inválido
+                  value:
+                    data: null
+                    code: 500
+                    error: El backup generado está vacío o es inválido
+
+  /backup/restore:
+    post:
+      tags:
+        - Backup
+      summary: Restaurar base de datos desde backup
+      description: >
+        Recibe un archivo `.dump` (generado por `GET /backup`) via multipart
+        form-data y restaura la base de datos completa.
+
+
+        El proceso termina todas las conexiones activas a la base de datos antes
+        de ejecutar la restauración, luego ejecuta `pg_restore` contra
+        la base de datos de sistema (`postgres`) con `--clean --create --if-exists`
+        para recrear la base de datos desde cero.
+
+
+        El archivo temporal subido es eliminado del servidor al finalizar,
+        sea exitoso o fallido.
+
+
+        **Advertencia:** Esta operación es destructiva e irreversible. Todos los
+        datos actuales serán reemplazados por los del backup.
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: restaurarBackup
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo .dump generado por el endpoint GET /backup
+            encoding:
+              file:
+                contentType: application/octet-stream
+      responses:
+        "200":
+          description: Base de datos restaurada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      mensaje:
+                        type: string
+                  code:
+                    type: integer
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                data:
+                  mensaje: Base de datos restaurada correctamente
+                code: 200
+                error: null
+        "400":
+          description: Archivo no proporcionado o formato inválido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              examples:
+                sinArchivo:
+                  summary: No se envió archivo
+                  value:
+                    data: null
+                    code: 400
+                    error: No se proporcionó ningún archivo
+                formatoInvalido:
+                  summary: Archivo no es .dump
+                  value:
+                    data: null
+                    code: 400
+                    error: El archivo debe ser un .dump generado por el sistema de backup
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+        "500":
+          description: Error al restaurar la base de datos
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 500
+                error: Error al restaurar la base de datos
+
+  /backup/programados:
+    get:
+      tags:
+        - Backup
+      summary: Listar backups programados
+      description: >
+        Retorna la lista de backups generados automáticamente por el cron job,
+        almacenados en el servidor. Ordenados por fecha descendente (más reciente primero).
+
+
+        Cada backup incluye nombre, fecha de creación y tamaño en bytes.
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: listarBackupsProgramados
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de backups programados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "../openapi-shared.yaml#/components/schemas/BackupInfo"
+                  code:
+                    type: integer
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                data:
+                  - nombre: backup_veterinaria_2026-03-18T03-00-00-000Z.dump
+                    fecha: "2026-03-18T03:00:00.000Z"
+                    tamano: 131072
+                  - nombre: backup_veterinaria_2026-03-17T03-00-00-000Z.dump
+                    fecha: "2026-03-17T03:00:00.000Z"
+                    tamano: 128000
+                code: 200
+                error: null
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+
+  /backup/programados/{nombre}:
+    get:
+      tags:
+        - Backup
+      summary: Descargar backup programado
+      description: >
+        Descarga un backup específico del servidor por su nombre de archivo.
+
+
+        El archivo permanece en el servidor después de la descarga (no es eliminado).
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: descargarBackupProgramado
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: nombre
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^backup_.+\.dump$'
+          example: backup_veterinaria_2026-03-18T03-00-00-000Z.dump
+      responses:
+        "200":
+          description: Archivo de backup descargado exitosamente
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="backup_veterinaria_2026-03-18T03-00-00-000Z.dump"'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Nombre de archivo inválido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 400
+                error: Nombre de archivo inválido
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          description: Backup no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 404
+                error: Backup no encontrado
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+    delete:
+      tags:
+        - Backup
+      summary: Eliminar backup programado
+      description: >
+        Elimina permanentemente un backup del servidor.
+
+
+        **Advertencia:** Esta operación es irreversible.
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: eliminarBackupProgramado
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: nombre
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^backup_.+\.dump$'
+          example: backup_veterinaria_2026-03-18T03-00-00-000Z.dump
+      responses:
+        "200":
+          description: Backup eliminado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      mensaje:
+                        type: string
+                  code:
+                    type: integer
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                data:
+                  mensaje: Backup eliminado correctamente
+                code: 200
+                error: null
+        "400":
+          description: Nombre de archivo inválido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 400
+                error: Nombre de archivo inválido
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          description: Backup no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 404
+                error: Backup no encontrado
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+
+  /backup/programados/{nombre}/restaurar:
+    post:
+      tags:
+        - Backup
+      summary: Restaurar base de datos desde backup programado
+      description: >
+        Restaura la base de datos completa usando un backup almacenado en el servidor,
+        sin necesidad de subir el archivo.
+
+
+        El proceso termina todas las conexiones activas a la base de datos antes
+        de ejecutar la restauración.
+
+
+        El archivo de backup **no es eliminado** del servidor después de la restauración.
+
+
+        **Advertencia:** Esta operación es destructiva e irreversible. Todos los
+        datos actuales serán reemplazados por los del backup.
+
+
+        **Acceso restringido:** Solo usuarios con rol `ADMINISTRADOR_SISTEMA` (rol ID 7).
+      operationId: restaurarBackupProgramado
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: nombre
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^backup_.+\.dump$'
+          example: backup_veterinaria_2026-03-18T03-00-00-000Z.dump
+      responses:
+        "200":
+          description: Base de datos restaurada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      mensaje:
+                        type: string
+                  code:
+                    type: integer
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                data:
+                  mensaje: Base de datos restaurada correctamente
+                code: 200
+                error: null
+        "400":
+          description: Nombre de archivo inválido
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 400
+                error: Nombre de archivo inválido
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          description: Backup no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 404
+                error: Backup no encontrado
+        "429":
+          $ref: "../openapi-shared.yaml#/components/responses/TooManyRequests"
+        "500":
+          description: Error al restaurar la base de datos
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOError"
+              example:
+                data: null
+                code: 500
+                error: Error al restaurar la base de datos
+

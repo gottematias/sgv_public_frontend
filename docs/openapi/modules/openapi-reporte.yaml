@@ -1,0 +1,778 @@
+# OpenAPI Reporte Module
+# Business intelligence reporting endpoints (data + XLSX/CSV export)
+
+paths:
+  /reporte/turnos:
+    get:
+      tags:
+        - Reporte
+      summary: Reporte de turnos
+      description: |
+        Retorna un listado de turnos con sus datos completos para análisis.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteTurnos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por empleado asignado
+        - name: idEstado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por estado del turno
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Listado de turnos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReporteTurnos"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/turnos/export:
+    get:
+      tags:
+        - Reporte
+      summary: Exportar reporte de turnos
+      description: |
+        Exporta el reporte de turnos en formato XLSX o CSV.
+
+        El archivo se descarga con nombre `reporte_turnos_{fecha}.{formato}`.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteTurnosExport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: formato
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [xlsx, csv]
+          description: Formato de exportación
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por empleado asignado
+        - name: idEstado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por estado del turno
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Archivo de exportación
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/historiales-clinicos:
+    get:
+      tags:
+        - Reporte
+      summary: Reporte de historiales clínicos
+      description: |
+        Retorna un listado de historiales clínicos con diagnósticos y examen físico.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteHistorialesClinicos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por veterinario que atendió
+        - name: idMascota
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por mascota
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Listado de historiales clínicos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReporteHistoriales"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/historiales-clinicos/export:
+    get:
+      tags:
+        - Reporte
+      summary: Exportar reporte de historiales clínicos
+      description: |
+        Exporta el reporte de historiales clínicos en formato XLSX o CSV.
+
+        El archivo se descarga con nombre `reporte_historiales-clinicos_{fecha}.{formato}`.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteHistorialesExport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: formato
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [xlsx, csv]
+          description: Formato de exportación
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: idEmpleado
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por veterinario que atendió
+        - name: idMascota
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filtrar por mascota
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Archivo de exportación
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/productos-mas-vendidos:
+    get:
+      tags:
+        - Reporte
+      summary: Reporte de productos/servicios más vendidos
+      description: |
+        Retorna el ranking de productos y servicios más vendidos ordenado por cantidad total vendida.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteProductosMasVendidos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Ranking de productos y servicios más vendidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReporteProductos"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/productos-mas-vendidos/export:
+    get:
+      tags:
+        - Reporte
+      summary: Exportar reporte de productos/servicios más vendidos
+      description: |
+        Exporta el ranking de productos y servicios más vendidos en formato XLSX o CSV.
+
+        El archivo se descarga con nombre `reporte_productos-mas-vendidos_{fecha}.{formato}`.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteProductosMasVendidosExport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: formato
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [xlsx, csv]
+          description: Formato de exportación
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Archivo de exportación
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/ganancias:
+    get:
+      tags:
+        - Reporte
+      summary: Reporte de ganancias
+      description: |
+        Retorna un análisis de ingresos brutos, costos y ganancia neta agrupado por período.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteGanancias
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: agruparPor
+          in: query
+          schema:
+            type: string
+            enum: [dia, mes, anio]
+            default: mes
+          description: Granularidad de agrupación del detalle
+      responses:
+        "200":
+          description: Análisis de ganancias con resumen y detalle por período
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReporteGanancias"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/ganancias/export:
+    get:
+      tags:
+        - Reporte
+      summary: Exportar reporte de ganancias
+      description: |
+        Exporta el reporte de ganancias en formato XLSX o CSV.
+
+        El archivo se descarga con nombre `reporte_ganancias_{fecha}.{formato}`.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteGananciasExport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: formato
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [xlsx, csv]
+          description: Formato de exportación
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            example: "2025-01-01"
+          description: Fecha de inicio del rango (YYYY-MM-DD)
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            example: "2025-12-31"
+          description: Fecha de fin del rango (YYYY-MM-DD)
+        - name: agruparPor
+          in: query
+          schema:
+            type: string
+            enum: [dia, mes, anio]
+            default: mes
+          description: Granularidad de agrupación del detalle
+      responses:
+        "200":
+          description: Archivo de exportación
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/stock-bajo:
+    get:
+      tags:
+        - Reporte
+      summary: Reporte de stock bajo
+      description: |
+        Retorna productos cuyo stock actual es igual o menor al stock mínimo configurado.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteStockBajo
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Listado de productos con stock bajo o sin stock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOReporteStockBajo"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+  /reporte/stock-bajo/export:
+    get:
+      tags:
+        - Reporte
+      summary: Exportar reporte de stock bajo
+      description: |
+        Exporta el reporte de stock bajo en formato XLSX o CSV.
+
+        El archivo se descarga con nombre `reporte_stock-bajo_{fecha}.{formato}`.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: reporteStockBajoExport
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: formato
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [xlsx, csv]
+          description: Formato de exportación
+      responses:
+        "200":
+          description: Archivo de exportación
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+
+components:
+  schemas:
+    ReporteTurnoItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        fechaHora:
+          type: string
+          example: "2025-06-15T10:30:00.000Z"
+        duracionMinutos:
+          type: integer
+          example: 30
+        motivo:
+          type: string
+        notas:
+          type: string
+          nullable: true
+        turnoTipo:
+          type: string
+          example: Consulta
+        turnoEstado:
+          type: string
+          example: Completado
+        empleadoNombre:
+          type: string
+          example: "Dr. Juan Pérez"
+        mascotaNombre:
+          type: string
+          example: Firulais
+        mascotaEspecie:
+          type: string
+          example: Perro
+        mascotaRaza:
+          type: string
+          example: Labrador
+        clienteNombre:
+          type: string
+          example: "María García"
+
+    ReporteHistorialItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        fechaConsulta:
+          type: string
+          example: "2025-06-15T10:30:00.000Z"
+        motivoConsulta:
+          type: string
+        tratamiento:
+          type: string
+          nullable: true
+        observaciones:
+          type: string
+          nullable: true
+        empleadoNombre:
+          type: string
+          example: "Dr. Juan Pérez"
+        mascotaNombre:
+          type: string
+          example: Firulais
+        mascotaEspecie:
+          type: string
+          example: Perro
+        mascotaRaza:
+          type: string
+          example: Labrador
+        clienteNombre:
+          type: string
+          example: "María García"
+        diagnosticos:
+          type: array
+          items:
+            type: string
+          example: ["Otitis", "Dermatitis"]
+        examenFisico:
+          type: object
+          nullable: true
+          properties:
+            peso:
+              type: number
+              nullable: true
+              example: 12.5
+            temperatura:
+              type: number
+              nullable: true
+              example: 38.5
+            frecuenciaCardiaca:
+              type: integer
+              nullable: true
+              example: 80
+            frecuenciaRespiratoria:
+              type: integer
+              nullable: true
+              example: 18
+            presionArterial:
+              type: string
+              nullable: true
+              example: "120/80"
+            saturacionOxigeno:
+              type: number
+              nullable: true
+              example: 98.5
+
+    ReporteProductoItem:
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum: [PRODUCTO, SERVICIO]
+        id:
+          type: integer
+        nombre:
+          type: string
+          example: "Vacuna Antirrábica"
+        codigoInterno:
+          type: string
+          example: "VAC-001"
+        totalVendido:
+          type: integer
+          example: 45
+        totalIngreso:
+          type: number
+          example: 4500.00
+        precio:
+          type: number
+          example: 100.00
+
+    ReporteGananciasDetalle:
+      type: object
+      properties:
+        periodo:
+          type: string
+          example: "2025-06"
+        ingresosBrutos:
+          type: number
+          example: 150000.00
+        gananciaNeta:
+          type: number
+          example: 90000.00
+        cantidadVentas:
+          type: integer
+          example: 120
+
+    ReporteStockBajoItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          example: "Amoxicilina 500mg"
+        codigo:
+          type: string
+          nullable: true
+          example: "MED-001"
+        codigoInterno:
+          type: string
+          nullable: true
+          example: "AMO-500"
+        stockActual:
+          type: integer
+          example: 2
+        stockMinimo:
+          type: integer
+          example: 10
+        diferencia:
+          type: integer
+          example: -8
+        categoria:
+          type: string
+          nullable: true
+          example: "Medicamentos"
+        precioVenta:
+          type: number
+          example: 250.00
+        precioCosto:
+          type: number
+          example: 150.00
+        estado:
+          type: string
+          enum: [SIN_STOCK, STOCK_BAJO]
+          example: STOCK_BAJO
+
+    ResponseDTOReporteTurnos:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReporteTurnoItem"
+        code:
+          type: integer
+          example: 200
+        error:
+          type: string
+          example: ""
+
+    ResponseDTOReporteHistoriales:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReporteHistorialItem"
+        code:
+          type: integer
+          example: 200
+        error:
+          type: string
+          example: ""
+
+    ResponseDTOReporteProductos:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReporteProductoItem"
+        code:
+          type: integer
+          example: 200
+        error:
+          type: string
+          example: ""
+
+    ResponseDTOReporteGanancias:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            resumen:
+              type: object
+              properties:
+                ingresosBrutos:
+                  type: number
+                  example: 500000.00
+                gananciaNeta:
+                  type: number
+                  example: 300000.00
+                totalVentas:
+                  type: integer
+                  example: 450
+            detalle:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReporteGananciasDetalle"
+        code:
+          type: integer
+          example: 200
+        error:
+          type: string
+          example: ""
+
+    ResponseDTOReporteStockBajo:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReporteStockBajoItem"
+        code:
+          type: integer
+          example: 200
+        error:
+          type: string
+          example: ""

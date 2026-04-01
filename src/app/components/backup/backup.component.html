@@ -1,0 +1,179 @@
+<div class="p-4">
+  <p-confirmDialog [style]="{ width: '450px' }" />
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center gap-2 px-4 pt-4">
+        <i class="pi pi-database text-2xl"></i>
+        <h2 class="m-0 text-xl font-semibold">Backup de Base de Datos</h2>
+      </div>
+    </ng-template>
+
+    <!-- Sección: Descargar -->
+    <h3 class="mt-0 mb-2 text-lg font-medium">
+      <i class="pi pi-download mr-2"></i>Descargar Backup
+    </h3>
+    <p class="text-color-secondary mb-3">
+      Genera y descarga un backup completo de la base de datos en formato
+      <strong>.dump</strong>. El archivo incluye todos los datos y permite
+      restaurar la base de datos desde cero.
+    </p>
+
+    <div class="flex align-items-center gap-3">
+      <p-button
+        label="Descargar Backup"
+        icon="pi pi-download"
+        [disabled]="isLoading"
+        (onClick)="descargarBackup()"
+        pTooltip="Descargar backup completo de la base de datos"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+
+      @if (isLoading) {
+        <p-progressspinner
+          [style]="{ width: '32px', height: '32px' }"
+          strokeWidth="4"
+        />
+        <span class="text-color-secondary text-sm">Generando backup...</span>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- Sección: Restaurar desde archivo -->
+    <h3 class="mt-0 mb-2 text-lg font-medium">
+      <i class="pi pi-upload mr-2"></i>Restaurar Base de Datos
+    </h3>
+
+    <p-message
+      severity="warn"
+      styleClass="mb-3 w-full"
+      text="Advertencia: Esta operación es destructiva e irreversible. Todos los datos actuales serán reemplazados por los del archivo de backup."
+    />
+
+    <p class="text-color-secondary mb-3">
+      Seleccione un archivo <strong>.dump</strong> generado previamente por esta
+      aplicación para restaurar la base de datos.
+    </p>
+
+    <div class="flex align-items-center gap-3">
+      <p-fileUpload
+        mode="basic"
+        name="file"
+        accept=".dump"
+        [auto]="true"
+        [customUpload]="true"
+        chooseLabel="Seleccionar archivo .dump"
+        chooseIcon="pi pi-upload"
+        [disabled]="isRestoring"
+        (uploadHandler)="onArchivoSeleccionado($event)"
+        pTooltip="Seleccionar archivo .dump para restaurar la base de datos"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+
+      @if (isRestoring) {
+        <p-progressspinner
+          [style]="{ width: '32px', height: '32px' }"
+          strokeWidth="4"
+        />
+        <span class="text-color-secondary text-sm">Restaurando...</span>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- Sección: Backups Programados -->
+    <div class="flex align-items-center justify-content-between mb-3">
+      <h3 class="mt-0 mb-0 text-lg font-medium">
+        <i class="pi pi-calendar mr-2"></i>Backups Programados
+      </h3>
+      <p-button
+        icon="pi pi-refresh"
+        label="Actualizar"
+        severity="secondary"
+        [loading]="isLoadingProgramados"
+        (onClick)="cargarBackupsProgramados()"
+        pTooltip="Recargar lista de backups programados"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      />
+    </div>
+
+    <p class="text-color-secondary mb-3">
+      Backups generados automáticamente por el servidor. Puede descargarlos,
+      restaurar la base de datos o eliminarlos.
+    </p>
+
+    <p-table
+      [value]="backupsProgramados"
+      [loading]="isLoadingProgramados"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '40rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th style="width: 12rem">Fecha</th>
+          <th style="width: 8rem">Tamaño</th>
+          <th style="width: 12rem">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-backup>
+        <tr>
+          <td>{{ backup.nombre }}</td>
+          <td>{{ backup.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ formatearTamano(backup.tamano) }}</td>
+          <td>
+            <div class="flex gap-2">
+              <p-button
+                icon="pi pi-download"
+                severity="info"
+                [text]="true"
+                [rounded]="true"
+                [loading]="isDescargandoProgramado === backup.nombre"
+                [disabled]="isDescargandoProgramado !== '' || isRestaurandoProgramado !== '' || isEliminandoProgramado !== ''"
+                (onClick)="descargarBackupProgramado(backup)"
+                pTooltip="Descargar este backup"
+                tooltipPosition="bottom"
+                [tooltipOptions]="{ life: 3000 }"
+              />
+              <p-button
+                icon="pi pi-history"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                [loading]="isRestaurandoProgramado === backup.nombre"
+                [disabled]="isDescargandoProgramado !== '' || isRestaurandoProgramado !== '' || isEliminandoProgramado !== ''"
+                (onClick)="restaurarDesdeBackupProgramado(backup)"
+                pTooltip="Restaurar base de datos desde este backup"
+                tooltipPosition="bottom"
+                [tooltipOptions]="{ life: 3000 }"
+              />
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                [loading]="isEliminandoProgramado === backup.nombre"
+                [disabled]="isDescargandoProgramado !== '' || isRestaurandoProgramado !== '' || isEliminandoProgramado !== ''"
+                (onClick)="eliminarBackupProgramado(backup)"
+                pTooltip="Eliminar este backup del servidor"
+                tooltipPosition="bottom"
+                [tooltipOptions]="{ life: 3000 }"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center text-color-secondary">
+            No hay backups programados disponibles
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

@@ -1,0 +1,452 @@
+# OpenAPI Clinica Module
+# This file contains all HistorialClinico and Diagnostico-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Clinica Module
+  version: 1.0.0
+  description: Módulo de gestión de historiales clínicos, diagnósticos y exámenes físicos
+
+paths:
+  /historial-clinico/create:
+    post:
+      tags:
+        - HistorialClinico
+      summary: Crear historial clínico
+      description: |
+        Crea un nuevo historial clínico para una mascota.
+
+        **Roles requeridos:** VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: historialClinicoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHistorialClinicoDto"
+      responses:
+        "201":
+          description: Historial creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/historial-clinico/update/{id}":
+    put:
+      tags:
+        - HistorialClinico
+      summary: Actualizar historial clínico
+      description: |
+        Actualiza los datos de un historial clínico existente.
+
+        **Roles requeridos:** VETERINARIO (1), ADMINISTRADOR_SISTEMA (7)
+      operationId: historialClinicoUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHistorialClinicoDto"
+      responses:
+        "200":
+          description: Historial actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/historial-clinico/get/{id}":
+    get:
+      tags:
+        - HistorialClinico
+      summary: Obtener historial clínico por ID
+      operationId: historialClinicoGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Historial encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOHistorialClinico"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /historial-clinico/list:
+    get:
+      tags:
+        - HistorialClinico
+      summary: Listar historiales clínicos
+      operationId: historialClinicoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idMascota
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por mascota
+        - name: idEmpleadoAsignado
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por veterinario
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha inicio del rango de fechaConsulta
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Fecha fin del rango de fechaConsulta
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de historiales
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOHistorialClinicoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/historial-clinico/delete/{id}":
+    delete:
+      tags:
+        - HistorialClinico
+      summary: Eliminar historial clínico (soft delete)
+      description: |
+        Elimina lógicamente un historial clínico (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: historialClinicoDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Historial eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /diagnostico/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar diagnósticos
+      operationId: diagnosticoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de diagnósticos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTODiagnosticoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    Diagnostico:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTODiagnosticoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Diagnostico"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ExamenFisico:
+      type: object
+      required:
+        - id
+        - idHistorialClinico
+      properties:
+        id:
+          type: integer
+        pesoGramos:
+          type: integer
+          nullable: true
+        temperaturaCorporal:
+          type: string
+          maxLength: 100
+          nullable: true
+        frecuenciaCardiaca:
+          type: string
+          maxLength: 100
+          nullable: true
+        frecuenciaRespiratoria:
+          type: string
+          maxLength: 100
+          nullable: true
+        estadoHidratacion:
+          type: string
+          maxLength: 100
+          nullable: true
+        general:
+          type: string
+          nullable: true
+        idHistorialClinico:
+          type: integer
+    CreateExamenFisicoDto:
+      type: object
+      properties:
+        pesoGramos:
+          type: integer
+          minimum: 0
+          example: 15000
+        temperaturaCorporal:
+          type: string
+          maxLength: 100
+          example: 38.5°C
+        frecuenciaCardiaca:
+          type: string
+          maxLength: 100
+          example: 100 lpm
+        frecuenciaRespiratoria:
+          type: string
+          maxLength: 100
+          example: 25 rpm
+        estadoHidratacion:
+          type: string
+          maxLength: 100
+          example: Normal
+        general:
+          type: string
+          example: Buen estado general
+    UpdateExamenFisicoDto:
+      type: object
+      properties:
+        pesoGramos:
+          type: integer
+          minimum: 0
+        temperaturaCorporal:
+          type: string
+          maxLength: 100
+        frecuenciaCardiaca:
+          type: string
+          maxLength: 100
+        frecuenciaRespiratoria:
+          type: string
+          maxLength: 100
+        estadoHidratacion:
+          type: string
+          maxLength: 100
+        general:
+          type: string
+    HistorialClinicoDiagnostico:
+      type: object
+      properties:
+        idHistorialClinico:
+          type: integer
+        idDiagnostico:
+          type: integer
+        diagnostico:
+          $ref: "#/components/schemas/Diagnostico"
+    HistorialClinico:
+      type: object
+      required:
+        - id
+        - fechaConsulta
+        - motivoConsulta
+        - idMascota
+        - idEmpleadoAsignado
+        - activo
+      properties:
+        id:
+          type: integer
+        fechaConsulta:
+          type: string
+          format: date-time
+        motivoConsulta:
+          type: string
+          maxLength: 200
+        tratamiento:
+          type: string
+          nullable: true
+        observaciones:
+          type: string
+          nullable: true
+        idMascota:
+          type: integer
+        idEmpleadoAsignado:
+          type: integer
+        activo:
+          type: boolean
+        mascota:
+          $ref: "openapi-mascota.yaml#/components/schemas/Mascota"
+        empleadoAsignado:
+          $ref: "openapi-empleado.yaml#/components/schemas/Empleado"
+        examenFisico:
+          $ref: "#/components/schemas/ExamenFisico"
+        historialesDiagnosticos:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistorialClinicoDiagnostico"
+    CreateHistorialClinicoDto:
+      type: object
+      required:
+        - motivoConsulta
+        - idMascota
+        - idEmpleadoAsignado
+      properties:
+        fechaConsulta:
+          type: string
+          format: date-time
+          example: "2026-01-15T10:00:00Z"
+        motivoConsulta:
+          type: string
+          maxLength: 200
+          example: Control de rutina
+        tratamiento:
+          type: string
+          example: Vacunación antirrábica
+        observaciones:
+          type: string
+          example: Mascota en buen estado
+        idMascota:
+          type: integer
+          example: 1
+        idEmpleadoAsignado:
+          type: integer
+          example: 1
+        examenFisico:
+          $ref: "#/components/schemas/CreateExamenFisicoDto"
+        idDiagnosticos:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+          example:
+            - 1
+        idAdjuntos:
+          type: array
+          maxItems: 50
+          items:
+            type: integer
+          example: []
+    UpdateHistorialClinicoDto:
+      type: object
+      properties:
+        fechaConsulta:
+          type: string
+          format: date-time
+        motivoConsulta:
+          type: string
+          maxLength: 200
+        tratamiento:
+          type: string
+        observaciones:
+          type: string
+        idMascota:
+          type: integer
+        idEmpleadoAsignado:
+          type: integer
+        examenFisico:
+          $ref: "#/components/schemas/UpdateExamenFisicoDto"
+        idDiagnosticos:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+        idAdjuntos:
+          type: array
+          maxItems: 50
+          items:
+            type: integer
+        activo:
+          type: boolean
+          description: Estado activo del registro
+          example: true
+    ResponseDTOHistorialClinico:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/HistorialClinico"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOHistorialClinicoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistorialClinico"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

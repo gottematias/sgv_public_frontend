@@ -1,0 +1,10 @@
+export enum TurnoEstado {
+  PROGRAMADO = 1,
+  EN_SALA = 2,
+  EN_CURSO = 3,
+  COMPLETADO = 4,
+  CANCELADO_POR_CLIENTE = 5,
+  CANCELADO_POR_CLINICA = 6,
+  NO_ASISTIO = 7,
+  REPROGRAMADO = 8,
+}

@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--surface-ground);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .p-menubar {
+  padding: 0.25rem 1rem;
+  min-height: auto;
+}
+
+:host ::ng-deep .p-menubar .p-menuitem-link {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+}
+
+:host
+  ::ng-deep
+  .p-menubar
+  .p-menubar-root-list
+  > .p-menuitem
+  > .p-menuitem-content {
+  gap: 0.25rem;
+}
+
+.user-profile-button {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s ease;
+  min-height: auto;
+}
+
+.user-profile-button:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+.user-profile-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.user-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.user-info-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  background-color: var(--surface-section);
+}
+
+.user-info-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  text-align: center;
+}

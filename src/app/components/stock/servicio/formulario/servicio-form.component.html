@@ -1,0 +1,157 @@
+<form [formGroup]="formGroupServicio" (ngSubmit)="guardar()">
+  <div class="mb-4">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label for="nombre" class="block mb-2">
+          Nombre <span class="text-red-500">*</span>
+        </label>
+        <input
+          id="nombre"
+          type="text"
+          pInputText
+          formControlName="nombre"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupServicio.get('nombre')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el nombre del servicio"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupServicio.get("nombre")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >El nombre es requerido (máximo 250 caracteres)</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="codigoInterno" class="block mb-2">
+          Código Interno <span class="text-red-500">*</span>
+          @if (servicioId) {
+            <span class="text-gray-500 text-sm">(No editable)</span>
+          }
+        </label>
+        <input
+          id="codigoInterno"
+          type="text"
+          pInputText
+          formControlName="codigoInterno"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupServicio.get('codigoInterno')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el código interno único del servicio"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        />
+        @if (formGroupServicio.get("codigoInterno")?.invalid && formEnviado) {
+          <small class="text-red-500">El código interno es requerido</small>
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="precio" class="block mb-2">
+          Precio <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="precio"
+          formControlName="precio"
+          mode="currency"
+          currency="USD"
+          locale="en-US"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupServicio.get('precio')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese el precio del servicio"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupServicio.get("precio")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >El precio es requerido y debe ser mayor o igual a 0</small
+          >
+        }
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="duracionMinutos" class="block mb-2">
+          Duración (minutos) <span class="text-red-500">*</span>
+        </label>
+        <p-inputNumber
+          inputId="duracionMinutos"
+          formControlName="duracionMinutos"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          [min]="0"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupServicio.get('duracionMinutos')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese la duración estimada del servicio"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [tooltipOptions]="{ life: 4000 }"
+        />
+        @if (formGroupServicio.get("duracionMinutos")?.invalid && formEnviado) {
+          <small class="text-red-500">La duración es requerida</small>
+        }
+      </div>
+
+      <div class="col-12">
+        <label for="descripcion" class="block mb-2"> Descripción </label>
+        <textarea
+          id="descripcion"
+          pTextarea
+          formControlName="descripcion"
+          rows="3"
+          class="w-full"
+          [class.ng-invalid]="
+            formGroupServicio.get('descripcion')?.invalid && formEnviado
+          "
+          pTooltip="Ingrese una descripción del servicio"
+          tooltipPosition="top"
+          [showDelay]="500"
+          [life]="4000"
+        ></textarea>
+        @if (formGroupServicio.get("descripcion")?.invalid && formEnviado) {
+          <small class="text-red-500"
+            >La descripción no debe exceder 500 caracteres</small
+          >
+        }
+      </div>
+
+      @if (servicioId && puedeToggleActivo) {
+        <div class="col-12">
+          <div class="flex align-items-center">
+            <p-checkbox
+              inputId="activo"
+              formControlName="activo"
+              [binary]="true"
+            />
+            <label for="activo" class="ml-2">Activo</label>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="flex justify-content-between gap-2 mt-4">
+    <p-button
+      label="Cancelar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="cerrar()"
+      type="button"
+    />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="guardar()" />
+  </div>
+</form>

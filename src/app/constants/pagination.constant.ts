@@ -1,0 +1,5 @@
+export const PAGINATION_LIMITS = {
+  PAGE: 100,
+  CATALOG: 1000,
+  CATALOG_LARGE: 10000,
+} as const;

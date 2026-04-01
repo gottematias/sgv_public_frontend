@@ -1,0 +1,523 @@
+# OpenAPI Empleado Module
+# This file contains all Empleado-related endpoints and schemas
+
+openapi: 3.0.3
+info:
+  title: SGV - Empleado Module
+  version: 1.0.0
+  description: Módulo de gestión de empleados, puestos, especialidades y atributos
+
+paths:
+  /empleado/create:
+    post:
+      tags:
+        - Empleado
+      summary: Crear empleado
+      description: |
+        Crea un nuevo empleado con sus puestos y especialidades.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: empleadoCreate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmpleadoDto"
+      responses:
+        "201":
+          description: Empleado creado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+  "/empleado/update/{id}":
+    put:
+      tags:
+        - Empleado
+      summary: Actualizar empleado
+      description: |
+        Actualiza los datos de un empleado existente.
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: empleadoUpdate
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmpleadoDto"
+      responses:
+        "200":
+          description: Empleado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTOId"
+        "400":
+          $ref: "../openapi-shared.yaml#/components/responses/BadRequest"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  "/empleado/get/{id}":
+    get:
+      tags:
+        - Empleado
+      summary: Obtener empleado por ID
+      operationId: empleadoGet
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Empleado encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOEmpleado"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /empleado/list:
+    get:
+      tags:
+        - Empleado
+      summary: Listar empleados
+      operationId: empleadoList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - name: idPuestos
+          in: query
+          schema:
+            type: string
+          description: 'Filtrar por puestos (CSV de IDs, ej: "1,2,3")'
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/ActivoParam"
+      responses:
+        "200":
+          description: Lista de empleados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOEmpleadoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /empleado/veterinarios:
+    get:
+      tags:
+        - Empleado
+      summary: Listar veterinarios
+      description: |
+        Retorna todos los empleados activos que tienen el rol VETERINARIO (id 1).
+
+        **Autenticación requerida:** cualquier usuario autenticado.
+      operationId: empleadoVeterinariosList
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/SearchQueryParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/LimitParam"
+        - $ref: "../openapi-shared.yaml#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: Lista de veterinarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOEmpleadoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  "/empleado/delete/{id}":
+    delete:
+      tags:
+        - Empleado
+      summary: Eliminar empleado (soft delete)
+      description: |
+        Elimina lógicamente un empleado (soft delete).
+
+        **Roles requeridos:** ADMINISTRADOR (5), ADMINISTRADOR_SISTEMA (7)
+      operationId: empleadoDelete
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "../openapi-shared.yaml#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Empleado eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "../openapi-shared.yaml#/components/schemas/ResponseDTONull"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+        "403":
+          $ref: "../openapi-shared.yaml#/components/responses/Forbidden"
+        "404":
+          $ref: "../openapi-shared.yaml#/components/responses/NotFound"
+  /empleado/puesto/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar puestos
+      operationId: empleadoPuestoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de puestos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOPuestoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /empleado/atributo-tipo/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar tipos de atributo
+      operationId: empleadoAtributoTipoList
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lista de tipos de atributo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOAtributoTipoArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+  /empleado/especialidad/list:
+    get:
+      tags:
+        - Catalogos
+      summary: Listar especialidades
+      operationId: empleadoEspecialidadList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: idPuesto
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por puesto
+      responses:
+        "200":
+          description: Lista de especialidades
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDTOEspecialidadArray"
+        "401":
+          $ref: "../openapi-shared.yaml#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    Puesto:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOPuestoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Puesto"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    Especialidad:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+        idPuesto:
+          type: integer
+          nullable: true
+        puesto:
+          $ref: "#/components/schemas/Puesto"
+    ResponseDTOEspecialidadArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Especialidad"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    AtributoTipo:
+      type: object
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+          maxLength: 100
+        descripcion:
+          type: string
+          nullable: true
+    ResponseDTOAtributoTipoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AtributoTipo"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    EmpleadoPuestoDto:
+      type: object
+      required:
+        - id
+        - fechaInicio
+      properties:
+        id:
+          type: integer
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+    CreateEmpleadoAtributoDto:
+      type: object
+      required:
+        - idAtributoTipo
+        - valor
+      properties:
+        idAtributoTipo:
+          type: integer
+        valor:
+          type: string
+          minLength: 1
+          maxLength: 500
+    EmpleadoPuesto:
+      type: object
+      properties:
+        id:
+          type: integer
+        idEmpleado:
+          type: integer
+        idPuesto:
+          type: integer
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+        activo:
+          type: boolean
+        puesto:
+          $ref: "#/components/schemas/Puesto"
+    EmpleadoAtributo:
+      type: object
+      properties:
+        id:
+          type: integer
+        valor:
+          type: string
+        idAtributoTipo:
+          type: integer
+        idEmpleado:
+          type: integer
+        atributoTipo:
+          $ref: "#/components/schemas/AtributoTipo"
+    EmpleadoEspecialidad:
+      type: object
+      properties:
+        idEmpleado:
+          type: integer
+        idEspecialidad:
+          type: integer
+        especialidad:
+          $ref: "#/components/schemas/Especialidad"
+    Empleado:
+      type: object
+      required:
+        - id
+        - fechaIngreso
+        - activo
+        - idUsuario
+      properties:
+        id:
+          type: integer
+        fechaIngreso:
+          type: string
+          format: date
+        fechaEgreso:
+          type: string
+          format: date
+          nullable: true
+        activo:
+          type: boolean
+        idUsuario:
+          type: integer
+        usuario:
+          $ref: "openapi-usuario.yaml#/components/schemas/Usuario"
+        empleadosPuestos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmpleadoPuesto"
+        empleadosAtributos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmpleadoAtributo"
+        empleadosEspecialidades:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmpleadoEspecialidad"
+    CreateEmpleadoDto:
+      type: object
+      required:
+        - idUsuario
+        - fechaIngreso
+      properties:
+        idUsuario:
+          type: integer
+          example: 1
+        fechaIngreso:
+          type: string
+          format: date
+          example: "2026-01-15"
+        puestos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmpleadoPuestoDto"
+        atributos:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateEmpleadoAtributoDto"
+        idEspecialidades:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+    UpdateEmpleadoDto:
+      type: object
+      properties:
+        fechaIngreso:
+          type: string
+          format: date
+        fechaEgreso:
+          type: string
+          format: date
+        activo:
+          type: boolean
+        puestos:
+          type: array
+          items:
+            $ref: "#/components/schemas/EmpleadoPuestoDto"
+        atributos:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateEmpleadoAtributoDto"
+        idEspecialidades:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+    ResponseDTOEmpleado:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          $ref: "#/components/schemas/Empleado"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""
+    ResponseDTOEmpleadoArray:
+      type: object
+      required:
+        - data
+        - code
+        - error
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Empleado"
+        code:
+          type: integer
+          example: 0
+        error:
+          type: string
+          example: ""

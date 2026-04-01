@@ -1,0 +1,89 @@
+<div class="card flex flex-column h-full">
+  <div class="flex align-items-center gap-2 mb-4">
+    <i class="pi pi-question-circle text-3xl text-primary"></i>
+    <div>
+      <h2 class="m-0 text-2xl font-semibold">Ayuda y Documentación</h2>
+      <p class="m-0 text-color-secondary text-sm">
+        Guía de uso del Sistema de Gestión Veterinaria
+      </p>
+    </div>
+  </div>
+
+  <p-tabs [(value)]="activeTab" scrollable>
+    <p-tablist>
+      @for (seccion of secciones; track seccion.id; let i = $index) {
+        <p-tab [value]="i">
+          <i [class]="seccion.icono + ' mr-2'"></i>{{ seccion.titulo }}
+        </p-tab>
+      }
+    </p-tablist>
+
+    <p-tabpanels>
+      @for (seccion of secciones; track seccion.id; let i = $index) {
+        <p-tabpanel [value]="i">
+          <div class="ayuda-seccion">
+            <div class="mb-3">
+              <h3
+                class="text-xl font-semibold mb-1 flex align-items-center gap-2"
+              >
+                <i [class]="seccion.icono"></i>
+                {{ seccion.titulo }}
+              </h3>
+              <p class="text-color-secondary mt-0 mb-3">
+                {{ seccion.descripcion }}
+              </p>
+              <div class="flex flex-wrap align-items-center gap-2">
+                <span class="text-sm font-medium">Acceso:</span>
+                @for (rol of seccion.rolesConAcceso; track rol) {
+                  <p-tag [value]="rol" severity="info" />
+                }
+              </div>
+            </div>
+
+            <p-divider />
+
+            @for (
+              bloque of seccion.contenido;
+              track bloque.subtitulo;
+              let last = $last;
+              let j = $index
+            ) {
+              <div class="ayuda-bloque mb-4">
+                <h4 class="text-lg font-medium mb-2">{{ bloque.subtitulo }}</h4>
+                @if (bloque.ruta) {
+                  <div class="flex align-items-center flex-wrap gap-1 mb-2">
+                    @for (paso of bloque.ruta; track $index; let last = $last) {
+                      <p-tag [value]="paso" severity="secondary" />
+                      @if (!last) {
+                        <i class="pi pi-angle-right text-color-secondary text-xs"></i>
+                      }
+                    }
+                  </div>
+                }
+                <p class="mb-3 line-height-3">{{ bloque.texto }}</p>
+                @if (bloque.imagen) {
+                  <div class="ayuda-imagen-wrapper">
+                    <img
+                      [src]="bloque.imagen"
+                      [alt]="bloque.imagenAlt ?? bloque.subtitulo"
+                      [attr.loading]="i === 0 && j === 0 ? 'eager' : 'lazy'"
+                      class="ayuda-imagen"
+                    />
+                    @if (bloque.imagenAlt) {
+                      <p class="text-xs text-color-secondary mt-1 text-center">
+                        {{ bloque.imagenAlt }}
+                      </p>
+                    }
+                  </div>
+                }
+              </div>
+              @if (!last) {
+                <p-divider />
+              }
+            }
+          </div>
+        </p-tabpanel>
+      }
+    </p-tabpanels>
+  </p-tabs>
+</div>

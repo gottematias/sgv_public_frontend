@@ -1,0 +1,47 @@
+<div class="mb-5">
+  <h2 class="mb-3 text-xl font-semibold">Accesos Rápidos</h2>
+  <div class="grid">
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearPersona">
+      <p-button
+        label="Crear Persona"
+        icon="pi pi-user-plus"
+        severity="info"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearPersona()"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearMascota">
+      <p-button
+        label="Crear Mascota"
+        icon="pi pi-github"
+        severity="success"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearMascota()"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeCrearTurno">
+      <p-button
+        label="Crear Turno"
+        icon="pi pi-calendar-plus"
+        severity="warn"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearTurno()"
+      ></p-button>
+    </div>
+
+    <div class="col-12 sm:col-6 md:col-4 xl:col" *ngIf="puedeRegistrarVenta">
+      <p-button
+        label="Registrar Venta"
+        icon="pi pi-shopping-cart"
+        severity="danger"
+        [style]="{ width: '100%' }"
+        (onClick)="abrirCrearVenta()"
+        pTooltip="Crear nueva venta"
+        tooltipPosition="bottom"
+        [tooltipOptions]="{ life: 3000 }"
+      ></p-button>
+    </div>
+  </div>
+</div>

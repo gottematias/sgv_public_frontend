@@ -1,0 +1,533 @@
+<p-confirmDialog
+  [key]="'clinicaForm'"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+>
+</p-confirmDialog>
+
+<p-tabs value="0">
+  <p-tablist>
+    <p-tab value="0">
+      <i class="pi pi-info-circle mr-2"></i>
+      Consulta
+    </p-tab>
+    <p-tab value="1">
+      <i class="pi pi-heart mr-2"></i>
+      Examen Físico
+    </p-tab>
+    <p-tab value="2">
+      <i class="pi pi-paperclip mr-2"></i>
+      Adjuntos
+    </p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="0">
+      <form [formGroup]="formGroupHistorial">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <label for="idMascota" class="block mb-2">
+              Mascota <span class="text-red-500">*</span>
+            </label>
+            <p-select
+              id="idMascota"
+              formControlName="idMascota"
+              [options]="mascotas"
+              optionLabel="nombre"
+              optionValue="id"
+              [filter]="true"
+              placeholder="Seleccione mascota"
+              class="w-full"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+              [class.ng-invalid]="
+                formGroupHistorial.get('idMascota')?.invalid && formEnviado
+              "
+              pTooltip="Seleccione la mascota para el historial clínico"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            >
+              <ng-template let-mascota pTemplate="item">
+                <div>
+                  {{ mascota.nombre }}
+                  @if (mascota.persona) {
+                    ({{ mascota.persona.apellidos }},
+                    {{ mascota.persona.nombres }})
+                  }
+                </div>
+              </ng-template>
+              <ng-template let-mascota pTemplate="selectedItem">
+                {{ mascota.nombre }}
+                @if (mascota.persona) {
+                  ({{ mascota.persona.apellidos }},
+                  {{ mascota.persona.nombres }})
+                }
+              </ng-template>
+            </p-select>
+            @if (formGroupHistorial.get("idMascota")?.invalid && formEnviado) {
+              <small class="text-red-500">La mascota es requerida</small>
+            }
+          </div>
+
+          <div class="col-12 md:col-6">
+            <label for="duenio" class="block mb-2">Dueño</label>
+            <input
+              id="duenio"
+              type="text"
+              pInputText
+              [value]="nombreDuenio"
+              [disabled]="true"
+              placeholder="Seleccione una mascota para ver el dueño"
+              class="w-full"
+              pTooltip="Dueño de la mascota seleccionada"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12 md:col-6">
+            <label for="fechaConsulta" class="block mb-2">
+              Fecha de Consulta <span class="text-red-500">*</span>
+            </label>
+            <p-datepicker
+              id="fechaConsulta"
+              formControlName="fechaConsulta"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              [showTime]="true"
+              class="w-full"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+              pTooltip="Seleccione la fecha y hora de la consulta"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            ></p-datepicker>
+          </div>
+
+          <div class="col-12 md:col-6">
+            <label for="idEmpleadoAsignado" class="block mb-2">
+              Veterinario <span class="text-red-500">*</span>
+            </label>
+            <p-select
+              id="idEmpleadoAsignado"
+              formControlName="idEmpleadoAsignado"
+              [options]="veterinarios"
+              optionValue="id"
+              [filter]="true"
+              placeholder="Seleccione veterinario"
+              class="w-full"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+              [class.ng-invalid]="
+                formGroupHistorial.get('idEmpleadoAsignado')?.invalid &&
+                formEnviado
+              "
+              pTooltip="Seleccione el veterinario que atenderá la consulta"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            >
+              <ng-template let-vet pTemplate="item">
+                <div>
+                  <div class="font-semibold">
+                    {{ vet.usuario?.persona?.apellidos }},
+                    {{ vet.usuario?.persona?.nombres }}
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template let-vet pTemplate="selectedItem">
+                {{ vet.usuario?.persona?.apellidos }},
+                {{ vet.usuario?.persona?.nombres }}
+              </ng-template>
+            </p-select>
+            @if (
+              formGroupHistorial.get("idEmpleadoAsignado")?.invalid &&
+              formEnviado
+            ) {
+              <small class="text-red-500">El veterinario es requerido</small>
+            }
+          </div>
+
+          <div class="col-12">
+            <label for="motivoConsulta" class="block mb-2">
+              Motivo de Consulta <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              id="motivoConsulta"
+              pTextarea
+              formControlName="motivoConsulta"
+              rows="3"
+              maxlength="200"
+              placeholder="Describa el motivo de la consulta (máximo 200 caracteres)"
+              class="w-full"
+              [class.ng-invalid]="
+                formGroupHistorial.get('motivoConsulta')?.invalid && formEnviado
+              "
+              pTooltip="Ingrese el motivo de la consulta veterinaria"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            ></textarea>
+            <small class="text-500">Máximo 200 caracteres</small>
+            @if (
+              formGroupHistorial.get("motivoConsulta")?.invalid && formEnviado
+            ) {
+              <small class="text-red-500 block"
+                >El motivo de consulta es requerido</small
+              >
+            }
+          </div>
+
+          <div class="col-12">
+            <label for="tratamiento" class="block mb-2">Tratamiento</label>
+            <textarea
+              id="tratamiento"
+              pTextarea
+              formControlName="tratamiento"
+              rows="4"
+              placeholder="Describa el tratamiento aplicado o prescrito"
+              class="w-full"
+              pTooltip="Ingrese el tratamiento aplicado o prescrito"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            ></textarea>
+          </div>
+
+          <div class="col-12">
+            <label for="observaciones" class="block mb-2">Observaciones</label>
+            <textarea
+              id="observaciones"
+              pTextarea
+              formControlName="observaciones"
+              rows="4"
+              placeholder="Observaciones adicionales"
+              class="w-full"
+              pTooltip="Ingrese observaciones adicionales sobre la consulta"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            ></textarea>
+          </div>
+
+          <div class="col-12">
+            <label for="idDiagnosticos" class="block mb-2">
+              Diagnósticos (opcional)
+            </label>
+            <p-multiSelect
+              id="idDiagnosticos"
+              formControlName="idDiagnosticos"
+              [options]="diagnosticos"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccione diagnósticos"
+              [maxSelectedLabels]="3"
+              class="w-full"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+              pTooltip="Seleccione los diagnósticos asociados a la consulta"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            >
+              <ng-template let-diagnostico pTemplate="item">
+                <div>
+                  <div class="font-semibold">{{ diagnostico.nombre }}</div>
+                  @if (diagnostico.descripcion) {
+                    <div class="text-sm text-gray-600">
+                      {{ diagnostico.descripcion }}
+                    </div>
+                  }
+                </div>
+              </ng-template>
+            </p-multiSelect>
+            <small class="text-500">Máximo 20 diagnósticos</small>
+          </div>
+
+          @if (modoEdicion && puedeToggleActivo) {
+            <div class="col-12 md:col-6">
+              <span class="block mb-2">Estado</span>
+              <div class="flex align-items-center h-3rem">
+                <p-checkbox
+                  inputId="activo"
+                  formControlName="activo"
+                  [binary]="true"
+                ></p-checkbox>
+                <label for="activo" class="ml-2"
+                  >Historial clínico activo</label
+                >
+              </div>
+            </div>
+          }
+        </div>
+      </form>
+    </p-tabpanel>
+
+    <p-tabpanel value="1">
+      <form [formGroup]="formGroupHistorial">
+        <div formGroupName="examenFisico" class="grid">
+          <div class="col-12">
+            <p class="text-500">Todos los campos son opcionales</p>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <label for="pesoGramos" class="block mb-2">Peso (gramos)</label>
+            <input
+              id="pesoGramos"
+              type="number"
+              pInputText
+              formControlName="pesoGramos"
+              placeholder="Ej: 5000"
+              class="w-full"
+              pTooltip="Ingrese el peso de la mascota en gramos"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12 md:col-4">
+            <label for="temperaturaCorporal" class="block mb-2"
+              >Temperatura Corporal</label
+            >
+            <input
+              id="temperaturaCorporal"
+              type="text"
+              pInputText
+              formControlName="temperaturaCorporal"
+              placeholder="Ej: 38.5°C"
+              class="w-full"
+              pTooltip="Ingrese la temperatura corporal"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12 md:col-4">
+            <label for="frecuenciaCardiaca" class="block mb-2"
+              >Frecuencia Cardíaca</label
+            >
+            <input
+              id="frecuenciaCardiaca"
+              type="text"
+              pInputText
+              formControlName="frecuenciaCardiaca"
+              placeholder="Ej: 120 lpm"
+              class="w-full"
+              pTooltip="Ingrese la frecuencia cardíaca"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12 md:col-4">
+            <label for="frecuenciaRespiratoria" class="block mb-2"
+              >Frecuencia Respiratoria</label
+            >
+            <input
+              id="frecuenciaRespiratoria"
+              type="text"
+              pInputText
+              formControlName="frecuenciaRespiratoria"
+              placeholder="Ej: 30 rpm"
+              class="w-full"
+              pTooltip="Ingrese la frecuencia respiratoria"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12 md:col-4">
+            <label for="estadoHidratacion" class="block mb-2"
+              >Estado de Hidratación</label
+            >
+            <input
+              id="estadoHidratacion"
+              type="text"
+              pInputText
+              formControlName="estadoHidratacion"
+              placeholder="Ej: Normal, Deshidratado"
+              class="w-full"
+              pTooltip="Ingrese el estado de hidratación de la mascota"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            />
+          </div>
+
+          <div class="col-12">
+            <label for="general" class="block mb-2"
+              >Observaciones Generales</label
+            >
+            <textarea
+              id="general"
+              pTextarea
+              formControlName="general"
+              rows="4"
+              placeholder="Observaciones generales del examen físico"
+              class="w-full"
+              pTooltip="Ingrese observaciones generales del examen físico"
+              tooltipPosition="top"
+              [showDelay]="500"
+              [tooltipOptions]="{ life: 4000 }"
+            ></textarea>
+          </div>
+        </div>
+      </form>
+    </p-tabpanel>
+
+    <p-tabpanel value="2">
+      <div class="grid">
+        <div class="col-12">
+          <label for="adjuntoTipo" class="block mb-2">Tipo de Adjunto</label>
+          <div class="flex gap-2 align-items-start">
+            <div class="flex-1">
+              <p-select
+                id="adjuntoTipo"
+                [options]="adjuntoTipos"
+                [(ngModel)]="selectedAdjuntoTipo"
+                [ngModelOptions]="{ standalone: true }"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Seleccione tipo"
+                class="w-full"
+                [style]="{ width: '100%' }"
+                appendTo="body"
+                pTooltip="Seleccione el tipo de archivo que va a adjuntar"
+                tooltipPosition="top"
+                [showDelay]="500"
+              >
+                <ng-template let-tipo pTemplate="item">
+                  <div>
+                    <div class="font-semibold">{{ tipo.nombre }}</div>
+                    @if (tipo.descripcion) {
+                      <div class="text-sm text-gray-600">
+                        {{ tipo.descripcion }}
+                      </div>
+                    }
+                  </div>
+                </ng-template>
+              </p-select>
+              <small class="text-500"
+                >Seleccione el tipo antes de cargar archivos</small
+              >
+            </div>
+
+            <p-fileUpload
+              #fileUpload
+              mode="basic"
+              name="file[]"
+              [auto]="true"
+              [multiple]="true"
+              [customUpload]="true"
+              chooseIcon="pi pi-upload"
+              (uploadHandler)="onFileSelect($event)"
+              [disabled]="!selectedAdjuntoTipo"
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+            >
+              <ng-template pTemplate="content">
+                <span></span>
+              </ng-template>
+            </p-fileUpload>
+          </div>
+        </div>
+
+        @if (uploadedAdjuntos.length > 0) {
+          <div class="col-12">
+            <h4>Archivos Adjuntos ({{ uploadedAdjuntos.length }})</h4>
+
+            <p-table
+              [value]="uploadedAdjuntos"
+              [tableStyle]="{ 'min-width': '50rem' }"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Tamaño</th>
+                  <th>Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-adjunto>
+                <tr>
+                  <td>
+                    <i
+                      [class]="getFileIcon(adjunto.extension)"
+                      class="mr-2"
+                    ></i>
+                    {{ adjunto.nombre }}.{{ adjunto.extension }}
+                  </td>
+                  <td>{{ adjunto.adjuntoTipo.nombre }}</td>
+                  <td>{{ formatFileSize(adjunto.tamanioBytes) }}</td>
+                  <td>
+                    <div class="flex gap-2">
+                      <p-button
+                        icon="pi pi-eye"
+                        size="small"
+                        severity="help"
+                        [outlined]="true"
+                        (onClick)="viewFile(adjunto.id)"
+                        pTooltip="Visualizar"
+                        [tooltipOptions]="{ life: 3000 }"
+                      ></p-button>
+                      <p-button
+                        icon="pi pi-download"
+                        size="small"
+                        severity="info"
+                        [outlined]="true"
+                        (onClick)="
+                          downloadFile(
+                            adjunto.id,
+                            adjunto.nombre + '.' + adjunto.extension
+                          )
+                        "
+                        pTooltip="Descargar"
+                        [tooltipOptions]="{ life: 3000 }"
+                      ></p-button>
+                      <p-button
+                        icon="pi pi-trash"
+                        size="small"
+                        severity="danger"
+                        [outlined]="true"
+                        (onClick)="removeUploadedFile(adjunto.id)"
+                        pTooltip="Eliminar"
+                        [tooltipOptions]="{ life: 3000 }"
+                      ></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+
+            <small class="text-500"
+              >Máximo 50 adjuntos por historial clínico</small
+            >
+          </div>
+        }
+      </div>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<div
+  class="flex justify-content-between gap-2 mt-3 pt-3 border-top-1 surface-border"
+>
+  <p-button
+    label="Cancelar"
+    icon="pi pi-times"
+    severity="secondary"
+    (onClick)="cancelar()"
+  ></p-button>
+  <p-button
+    label="Guardar"
+    icon="pi pi-check"
+    (onClick)="guardar()"
+    [disabled]="formGroupHistorial.invalid"
+  ></p-button>
+</div>

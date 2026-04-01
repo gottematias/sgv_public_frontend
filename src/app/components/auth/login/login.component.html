@@ -1,0 +1,52 @@
+<div class="flex align-items-center justify-content-center min-h-screen">
+  <div class="flex flex-column align-items-center">
+    <img
+      src="assets/img-inicio-sesion.png"
+      alt="Logo del Sistema de Gestión Veterinaria"
+      class="login-logo mb-5"
+    />
+    <form
+      [formGroup]="formGroupSesion"
+      class="flex flex-column align-items-center"
+    >
+      <div class="w-20rem mb-5">
+        <label for="usuario" class="text-lg mb-2 block">Usuario</label>
+        <p-iconfield iconPosition="left" class="w-full">
+          <p-inputicon styleClass="pi pi-user" />
+          <input
+            class="w-full"
+            id="usuario"
+            type="text"
+            pInputText
+            formControlName="usuario"
+          />
+        </p-iconfield>
+      </div>
+      <div class="w-20rem mb-2">
+        <label for="contrasena" class="text-lg mb-2 block">Contraseña</label>
+        <p-iconfield iconPosition="left" class="w-full">
+          <p-inputicon styleClass="pi pi-lock" />
+          <input
+            class="w-full"
+            id="contrasena"
+            type="password"
+            pInputText
+            formControlName="contrasena"
+          />
+        </p-iconfield>
+      </div>
+      <div class="w-20rem mb-5 flex justify-content-end">
+        <a href="#" class="text-sm text-blue-500 no-underline hover:underline"
+          >¿Olvidó su contraseña?</a
+        >
+      </div>
+      <div class="w-20rem mb-5 flex justify-content-end">
+        <p-button
+          label="Inicia sesión"
+          (onClick)="iniciarSesion()"
+          [disabled]="disabledButton"
+        />
+      </div>
+    </form>
+  </div>
+</div>
